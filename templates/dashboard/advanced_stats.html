@@ -1,0 +1,176 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Murakkab Statistika - 24/7 Savdo{% endblock %}
+
+{% block page_title %}Murakkab Statistika (Hududlar kesimida){% endblock %}
+
+{% block content %}
+
+<div class="page-content fade-in-delay-1">
+    
+    <!-- Filtrlar -->
+    <div class="card mb-4">
+        <form method="GET" class="filters-bar" style="border: none;">
+            <select name="region" class="filter-select">
+                <option value="">Barcha viloyatlar</option>
+                {% for r in regions %}
+                    <option value="{{ r }}" {% if r == region_filter %}selected{% endif %}>{{ r }}</option>
+                {% endfor %}
+            </select>
+            
+            <select name="category" class="filter-select">
+                <option value="">Barcha kategoriyalar</option>
+                <option value="kochat" {% if category_filter == 'kochat' %}selected{% endif %}>Ko'chat</option>
+                <option value="meva" {% if category_filter == 'meva' %}selected{% endif %}>Meva/Mahsulot</option>
+                <option value="sabzavot" {% if category_filter == 'sabzavot' %}selected{% endif %}>Sabzavot</option>
+                <option value="parranda" {% if category_filter == 'parranda' %}selected{% endif %}>Parranda</option>
+                <option value="tuxum" {% if category_filter == 'tuxum' %}selected{% endif %}>Tuxum</option>
+            </select>
+            
+            <input type="text" name="q" class="filter-input" placeholder="Mahsulot nomi bilan izlash..." value="{{ q }}">
+            
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-filter"></i> Filtrlash
+            </button>
+            
+            <a href="{% url 'dashboard:advanced_stats' %}" class="btn btn-warning" style="margin-left:auto;">
+                <i class="fas fa-sync"></i> Tozalash
+            </a>
+        </form>
+    </div>
+
+    <div class="alert alert-info fade-in-delay-2">
+        <i class="fas fa-info-circle"></i>
+        Jami topilgan e'lonlar soni: <strong>{{ total_count }}</strong> ta.
+    </div>
+
+    <!-- Tree Structure -->
+    <div class="card fade-in-delay-3" style="padding: 20px;">
+        {% if tree %}
+            <ul class="tree-root">
+                {% for region, districts in tree.items %}
+                    <li class="tree-node">
+                        <div class="tree-item tree-region" onclick="toggleTree(this)">
+                            <i class="fas fa-chevron-right tree-icon"></i>
+                            <i class="fas fa-map-marker-alt"></i> {{ region }}
+                        </div>
+                        <ul class="tree-children" style="display: none;">
+                            {% for district, categories in districts.items %}
+                                <li class="tree-node">
+                                    <div class="tree-item tree-district" onclick="toggleTree(this)">
+                                        <i class="fas fa-chevron-right tree-icon"></i>
+                                        <i class="fas fa-city"></i> {{ district }}
+                                    </div>
+                                    <ul class="tree-children" style="display: none;">
+                                        {% for category, products in categories.items %}
+                                            <li class="tree-node">
+                                                <div class="tree-item tree-category" onclick="toggleTree(this)">
+                                                    <i class="fas fa-chevron-right tree-icon"></i>
+                                                    <i class="fas fa-folder-open"></i> {{ category }}
+                                                </div>
+                                                <ul class="tree-children" style="display: none;">
+                                                    {% for prod_name, count in products.items %}
+                                                        <li class="tree-node">
+                                                            <div class="tree-item tree-product">
+                                                                <span class="prod-bullet"></span>
+                                                                <span class="prod-name">{{ prod_name }}</span>
+                                                                <span class="prod-count badge badge-active">{{ count }} ta e'lon</span>
+                                                            </div>
+                                                        </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-search empty-icon"></i>
+                <h3>Hech narsa topilmadi</h3>
+                <p>Ushbu filtrlarga mos keluvchi mahsulotlar mavjud emas.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+/* Daraxtsimon dizayn */
+.tree-root {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.tree-node {
+    list-style: none;
+    margin: 5px 0;
+}
+.tree-children {
+    list-style: none;
+    padding-left: 25px;
+    border-left: 1px dashed var(--border);
+    margin-left: 10px;
+    margin-top: 5px;
+}
+.tree-item {
+    padding: 10px 15px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: var(--transition);
+    user-select: none;
+    font-size: 14px;
+    font-weight: 500;
+}
+.tree-item:hover {
+    background: rgba(45, 122, 79, 0.05);
+    border-color: var(--accent);
+}
+.tree-region { font-size: 16px; font-weight: 700; color: var(--primary); background: rgba(45, 122, 79, 0.08); }
+.tree-district { font-size: 15px; font-weight: 600; color: var(--text-secondary); }
+.tree-category { font-size: 14px; color: var(--info); }
+.tree-product { 
+    background: white; 
+    cursor: default; 
+    border-left: 3px solid var(--accent);
+    justify-content: space-between;
+}
+.tree-product:hover { background: white; border-color: var(--accent); }
+
+.tree-icon {
+    font-size: 12px;
+    transition: transform 0.3s ease;
+    color: var(--text-muted);
+}
+.tree-item.expanded .tree-icon {
+    transform: rotate(90deg);
+}
+.prod-name { font-weight: 600; color: var(--text-primary); }
+.mb-4 { margin-bottom: 20px; }
+</style>
+
+<script>
+function toggleTree(element) {
+    const childrenContainer = element.nextElementSibling;
+    if (childrenContainer && childrenContainer.classList.contains('tree-children')) {
+        const isHidden = childrenContainer.style.display === 'none';
+        childrenContainer.style.display = isHidden ? 'block' : 'none';
+        
+        // Icon rotation
+        if (isHidden) {
+            element.classList.add('expanded');
+        } else {
+            element.classList.remove('expanded');
+        }
+    }
+}
+</script>
+{% endblock %}

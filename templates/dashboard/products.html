@@ -1,0 +1,155 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Mahsulotlar — Quva Nihol{% endblock %}
+{% block page_title %}🛒 Mahsulotlar ({{ total_count }} ta){% endblock %}
+
+{% block content %}
+<div class="card fade-in">
+  <!-- FILTER BAR -->
+  <form method="GET" class="filters-bar">
+    <input type="text" name="search" class="filter-input" placeholder="🔍 Qidirish..." value="{{ search }}" style="width:220px;">
+    <select name="category" class="filter-select">
+      <option value="">Barcha turlar</option>
+      <option value="kochat" {% if category == 'kochat' %}selected{% endif %}>🌱 Ko'chat</option>
+      <option value="meva" {% if category == 'meva' %}selected{% endif %}>🍎 Meva/Mahsulot</option>
+    </select>
+    <input type="date" name="date" class="filter-input" value="{{ date_filter }}">
+    <button type="submit" class="btn btn-primary btn-sm">Filtrlash</button>
+    <a href="{% url 'dashboard:products' %}" class="btn btn-sm" style="background:rgba(82,183,136,0.1); color:var(--text-secondary); border:1px solid var(--border);">Tozalash</a>
+  </form>
+
+  <!-- TABLE -->
+  {% if products %}
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Rasm</th>
+          <th>Nomi</th>
+          <th>Tur</th>
+          <th>Narxi</th>
+          <th>Telefon</th>
+          <th>Manzil</th>
+          <th>Sana</th>
+          <th>Holat</th>
+          <th>Amallar</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in products %}
+        <tr id="row-{{ p.pk }}">
+          <td style="color:var(--text-muted); font-size:13px;">{{ p.pk }}</td>
+          <td>
+            {% with p.images.first as img %}
+            {% if img and img.image %}
+            <div style="width:48px;height:48px;border-radius:8px;overflow:hidden;border:1px solid var(--border);">
+              <img src="{{ img.image.url }}" style="width:100%;height:100%;object-fit:cover;" alt="{{ p.name }}">
+            </div>
+            {% else %}
+            <div style="width:48px;height:48px;border-radius:8px;background:rgba(82,183,136,0.1);display:flex;align-items:center;justify-content:center;font-size:22px;">
+              {% if p.category == 'kochat' %}🌱{% else %}🍎{% endif %}
+            </div>
+            {% endif %}
+            {% endwith %}
+          </td>
+          <td class="product-name-cell">
+            <a href="{% url 'dashboard:product_detail' p.pk %}">{{ p.name }}</a>
+            {% if p.description %}<br><span style="font-size:12px;color:var(--text-muted);">{{ p.description|truncatechars:40 }}</span>{% endif %}
+          </td>
+          <td>
+            {% if p.category == 'kochat' %}
+            <span class="badge badge-kochat">🌱 Ko'chat</span>
+            {% else %}
+            <span class="badge badge-meva">🍎 Meva</span>
+            {% endif %}
+          </td>
+          <td class="product-price-cell">{{ p.format_price }} so'm</td>
+          <td>{{ p.phone }}</td>
+          <td>
+            {% if p.location_lat %}
+            <a href="https://www.google.com/maps?q={{ p.location_lat }},{{ p.location_lon }}" target="_blank" class="btn btn-sm btn-info" style="padding:4px 10px;font-size:11px;">📍 Ko'rish</a>
+            {% else %}—{% endif %}
+          </td>
+          <td style="color:var(--text-muted); font-size:12px; white-space:nowrap;">{{ p.created_at|date:"d.m.Y" }}<br>{{ p.created_at|date:"H:i" }}</td>
+          <td>
+            <button
+              onclick="toggleProduct({{ p.pk }}, this)"
+              class="badge {% if p.is_active %}badge-active{% else %}badge-inactive{% endif %}"
+              style="cursor:pointer; border:none; font-size:12px;"
+              title="Bosib holat o'zgartiring"
+            >
+              {% if p.is_active %}✅ Faol{% else %}❌ Nofaol{% endif %}
+            </button>
+          </td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <a href="{% url 'dashboard:product_detail' p.pk %}" class="btn btn-icon btn-info" title="Ko'rish">👁️</a>
+              <a href="{% url 'dashboard:product_edit' p.pk %}" class="btn btn-icon btn-warning" title="Tahrirlash">✏️</a>
+              <button onclick="deleteProduct({{ p.pk }})" class="btn btn-icon btn-danger" title="O'chirish">🗑️</button>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">🌿</div>
+    <h3>Mahsulot topilmadi</h3>
+    <p>Filtr shartlarini o'zgartiring yoki Telegram bot orqali mahsulot qo'shing</p>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Delete Modal -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <div class="modal-title">🗑️ Mahsulotni o'chirish</div>
+    <p style="color:var(--text-secondary); font-size:14px;">
+      Bu mahsulot <strong>Telegram kanaldan ham o'chiriladi</strong>. Davom etasizmi?
+    </p>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()" style="background:rgba(82,183,136,0.1);color:var(--text-secondary);border:1px solid var(--border);">Bekor</button>
+      <form id="deleteForm" method="POST">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">🗑️ O'chirish</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function deleteProduct(pk) {
+  document.getElementById('deleteForm').action = `/dashboard/products/${pk}/delete/`;
+  document.getElementById('deleteModal').classList.add('active');
+}
+function closeModal() {
+  document.getElementById('deleteModal').classList.remove('active');
+}
+
+function toggleProduct(pk, btn) {
+  fetch(`/dashboard/products/${pk}/toggle/`, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': '{{ csrf_token }}',
+      'Content-Type': 'application/json',
+    }
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.is_active) {
+      btn.textContent = '✅ Faol';
+      btn.className = 'badge badge-active';
+    } else {
+      btn.textContent = '❌ Nofaol';
+      btn.className = 'badge badge-inactive';
+    }
+    btn.style.cssText = 'cursor:pointer; border:none; font-size:12px;';
+  });
+}
+</script>
+{% endblock %}

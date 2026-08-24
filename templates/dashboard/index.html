@@ -1,0 +1,288 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Statistika — 24/7 Savdo{% endblock %}
+{% block page_title %}📊 Statistika{% endblock %}
+
+{% block content %}
+
+<!-- FILTRLAR -->
+<div class="card mb-4 fade-in">
+    <form method="GET" class="filters-bar" style="border: none;">
+        <select name="period" class="filter-select">
+            <option value="all" {% if period == 'all' %}selected{% endif %}>Barcha vaqt</option>
+            <option value="today" {% if period == 'today' %}selected{% endif %}>Bugun</option>
+            <option value="week" {% if period == 'week' %}selected{% endif %}>Shu hafta</option>
+            <option value="month" {% if period == 'month' %}selected{% endif %}>Shu oy</option>
+        </select>
+        
+        <select name="region" class="filter-select">
+            <option value="">Barcha viloyatlar</option>
+            {% for r in regions %}
+                <option value="{{ r }}" {% if r == region_filter %}selected{% endif %}>{{ r }}</option>
+            {% endfor %}
+        </select>
+        
+        <select name="district" class="filter-select">
+            <option value="">Barcha tumanlar</option>
+            {% for d in districts %}
+                <option value="{{ d }}" {% if d == district_filter %}selected{% endif %}>{{ d }}</option>
+            {% endfor %}
+        </select>
+        
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-filter"></i> Filtrlash
+        </button>
+        
+        <a href="{% url 'dashboard:index' %}" class="btn btn-warning" style="margin-left:auto;">
+            <i class="fas fa-sync"></i> Tozalash
+        </a>
+    </form>
+</div>
+
+<!-- STAT CARDS -->
+<div class="stats-grid fade-in-delay-1">
+  <div class="stat-card">
+    <span class="stat-icon">📦</span>
+    <div class="stat-value">{{ total }}</div>
+    <div class="stat-label">Jami</div>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon">🌱</span>
+    <div class="stat-value">{{ kochat_count }}</div>
+    <div class="stat-label">Ko'chatlar</div>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon">🍎</span>
+    <div class="stat-value">{{ meva_count }}</div>
+    <div class="stat-label">Mevalar</div>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon">🥕</span>
+    <div class="stat-value">{{ sabzavot_count }}</div>
+    <div class="stat-label">Sabzavot</div>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon">🐔</span>
+    <div class="stat-value">{{ parranda_count }}</div>
+    <div class="stat-label">Parranda</div>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon">🥚</span>
+    <div class="stat-value">{{ tuxum_count }}</div>
+    <div class="stat-label">Tuxum</div>
+  </div>
+</div>
+
+<!-- CHARTS + RECENT -->
+<div class="grid-2 fade-in-delay-2">
+  <!-- CHART -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">📈 Faollik (Ko'chat va Meva)</div>
+    </div>
+    <div class="card-body">
+      <div class="chart-container">
+        <canvas id="activityChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- KATEGORIYA PIE -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">🥧 Kategoriya taqsimoti</div>
+    </div>
+    <div class="card-body" style="display:flex; align-items:center; justify-content:center; min-height:250px;">
+      <canvas id="categoryChart" style="max-height:220px;"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- OXIRGI MAHSULOTLAR -->
+<div class="card fade-in-delay-3" style="margin-top:20px;" >
+  <div class="card-header">
+    <div class="card-title">🕐 Oxirgi qo'shilgan mahsulotlar (Ushbu filtr bo'yicha)</div>
+    <a href="{% url 'dashboard:products' %}" class="btn btn-primary btn-sm">Barchasi →</a>
+  </div>
+  {% if recent_products %}
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Nomi</th>
+          <th>Tur</th>
+          <th>Narxi</th>
+          <th>Telefon</th>
+          <th>Hudud</th>
+          <th>Sana</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in recent_products %}
+        <tr>
+          <td style="color:var(--text-muted)">{{ p.pk }}</td>
+          <td class="product-name-cell">
+            <a href="{% url 'dashboard:product_detail' p.pk %}">{{ p.name }}</a>
+          </td>
+          <td>
+            {% if p.category == 'kochat' %}
+            <span class="badge badge-kochat" style="background:#e8f4ec; color:#2d7a4f;">🌱 Ko'chat</span>
+            {% elif p.category == 'meva' %}
+            <span class="badge badge-meva" style="background:#fdf5e6; color:#d49a2e;">🍎 Meva</span>
+            {% elif p.category == 'sabzavot' %}
+            <span class="badge" style="background:#e6f0fa; color:#2e75d4;">🥕 Sabzavot</span>
+            {% elif p.category == 'parranda' %}
+            <span class="badge" style="background:#fce8e8; color:#d42e2e;">🐔 Parranda</span>
+            {% elif p.category == 'tuxum' %}
+            <span class="badge" style="background:#f4f0e8; color:#9a7b4f;">🥚 Tuxum</span>
+            {% endif %}
+          </td>
+          <td class="product-price-cell">{{ p.format_price }} so'm</td>
+          <td>{{ p.phone }}</td>
+          <td style="font-size:12px;">{{ p.region }} <br> <span style="color:#7a9d8a">{{ p.district }}</span></td>
+          <td style="color:var(--text-muted); font-size:13px;">{{ p.created_at|date:"d.m.Y H:i" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">📭</div>
+    <h3>Mahsulot yo'q</h3>
+    <p>Ushbu filtrlarga mos mahsulot topilmadi.</p>
+  </div>
+  {% endif %}
+</div>
+<style>
+.mb-4 { margin-bottom: 20px; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const labels = {{ chart_labels|safe }};
+const kochatData = {{ chart_kochat_data|safe }};
+const mevaData = {{ chart_meva_data|safe }};
+const sabzavotData = {{ chart_sabzavot_data|safe }};
+const parrandaData = {{ chart_parranda_data|safe }};
+const tuxumData = {{ chart_tuxum_data|safe }};
+
+// Activity chart
+const ctx1 = document.getElementById('activityChart').getContext('2d');
+new Chart(ctx1, {
+  type: 'line',
+  data: {
+    labels: labels,
+    datasets: [
+      {
+        label: "Ko'chat",
+        data: kochatData,
+        borderColor: '#2d7a4f',
+        backgroundColor: 'rgba(45, 122, 79, 0.1)',
+        borderWidth: 2.5,
+        tension: 0.4,
+        fill: true,
+      },
+      {
+        label: "Meva",
+        data: mevaData,
+        borderColor: '#d49a2e',
+        backgroundColor: 'rgba(212, 154, 46, 0.1)',
+        borderWidth: 2.5,
+        tension: 0.4,
+        fill: true,
+      },
+      {
+        label: "Sabzavot",
+        data: sabzavotData,
+        borderColor: '#2e75d4',
+        backgroundColor: 'rgba(46, 117, 212, 0.1)',
+        borderWidth: 2.5,
+        tension: 0.4,
+        fill: true,
+      },
+      {
+        label: "Parranda",
+        data: parrandaData,
+        borderColor: '#d42e2e',
+        backgroundColor: 'rgba(212, 46, 46, 0.1)',
+        borderWidth: 2.5,
+        tension: 0.4,
+        fill: true,
+      },
+      {
+        label: "Tuxum",
+        data: tuxumData,
+        borderColor: '#9a7b4f',
+        backgroundColor: 'rgba(154, 123, 79, 0.1)',
+        borderWidth: 2.5,
+        tension: 0.4,
+        fill: true,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top', labels: {font: {size: 12}} },
+      tooltip: {
+        mode: 'index',
+        intersect: false,
+        backgroundColor: 'rgba(255,255,255,0.9)',
+        titleColor: '#1a2e23',
+        bodyColor: '#3d5a4a',
+        borderColor: '#d8e8df',
+        borderWidth: 1,
+      }
+    },
+    scales: {
+      x: {
+        grid: { color: 'rgba(0,0,0,0.03)' },
+        ticks: { font: { size: 11 }, maxTicksLimit: 15 },
+      },
+      y: {
+        grid: { color: 'rgba(0,0,0,0.03)' },
+        ticks: { font: { size: 11 }, stepSize: 1 },
+        beginAtZero: true,
+      }
+    }
+  }
+});
+
+// Category pie
+const ctx2 = document.getElementById('categoryChart').getContext('2d');
+new Chart(ctx2, {
+  type: 'doughnut',
+  data: {
+    labels: ["🌱 Ko'chat", "🍎 Meva", "🥕 Sabzavot", "🐔 Parranda", "🥚 Tuxum"],
+    datasets: [{
+      data: [{{ kochat_count }}, {{ meva_count }}, {{ sabzavot_count }}, {{ parranda_count }}, {{ tuxum_count }}],
+      backgroundColor: ['rgba(45,122,79,0.85)', 'rgba(212, 154, 46, 0.85)', 'rgba(46, 117, 212, 0.85)', 'rgba(212, 46, 46, 0.85)', 'rgba(154, 123, 79, 0.85)'],
+      borderColor: ['#2d7a4f', '#d49a2e', '#2e75d4', '#d42e2e', '#9a7b4f'],
+      borderWidth: 2,
+      hoverOffset: 8,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: { padding: 16, font: { size: 13 } }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(255,255,255,0.9)',
+        titleColor: '#1a2e23',
+        bodyColor: '#3d5a4a',
+        borderColor: '#d8e8df',
+        borderWidth: 1,
+      }
+    },
+    cutout: '65%',
+  }
+});
+</script>
+{% endblock %}

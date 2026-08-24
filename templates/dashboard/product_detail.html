@@ -1,0 +1,74 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}{{ product.name }} — Quva Nihol{% endblock %}
+{% block page_title %}👁️ Mahsulot: {{ product.name }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:16px;">
+  <a href="{% url 'dashboard:products' %}" class="btn btn-sm" style="background:rgba(82,183,136,0.1);color:var(--text-secondary);border:1px solid var(--border);">← Orqaga</a>
+  <a href="{% url 'dashboard:product_edit' product.pk %}" class="btn btn-warning btn-sm" style="margin-left:8px;">✏️ Tahrirlash</a>
+</div>
+
+<div class="grid-2 fade-in">
+  <!-- RASMLAR -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">📸 Rasmlar ({{ images|length }} ta)</div>
+    </div>
+    <div class="card-body">
+      {% if images %}
+      <div class="product-images-grid">
+        {% for img in images %}
+        <div class="product-img-thumb" onclick="window.open('{{ img.image.url }}','_blank')">
+          <img src="{{ img.image.url }}" alt="Rasm {{ forloop.counter }}">
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p style="color:var(--text-muted); font-size:14px;">Rasm yo'q (Telegram file_id orqali yuklangan)</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- MA'LUMOTLAR -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">📋 Ma'lumotlar</div>
+      {% if product.is_active %}
+      <span class="badge badge-active">✅ Faol</span>
+      {% else %}
+      <span class="badge badge-inactive">❌ Nofaol</span>
+      {% endif %}
+    </div>
+    <div class="card-body">
+      <table style="width:100%;">
+        <tr><td style="padding:8px 0;color:var(--text-muted);font-size:13px;width:40%;">Tur</td>
+          <td>{% if product.category == 'kochat' %}<span class="badge badge-kochat">🌱 Ko'chat</span>{% else %}<span class="badge badge-meva">🍎 Meva</span>{% endif %}</td></tr>
+        <tr><td style="padding:8px 0;color:var(--text-muted);font-size:13px;">Nomi</td>
+          <td style="font-weight:600;">{{ product.name }}</td></tr>
+        <tr><td style="padding:8px 0;color:var(--text-muted);font-size:13px;">Narxi</td>
+          <td style="color:var(--accent-light);font-weight:700;font-family:'Outfit',sans-serif;font-size:18px;">{{ product.format_price }} so'm</td></tr>
+        {% if product.category == 'kochat' %}
+        <tr><td style="padding:8px 0;color:var(--text-muted);font-size:13px;">Yoshi</td>
+          <td>{{ product.age|default:"—" }}</td></tr>
+        <tr><td style="padding:8px 0;color:var(--text-muted);font-size:13px;">Soni</td>
+          <td>{{ product.quantity|default:"—" }} dona</td></tr>
+        {% endif %}
+        <tr><td style="padding:8px 0;color:var(--text-muted);font-size:13px;">Telefon</td>
+          <td><a href="tel:{{ product.phone }}">{{ product.phone }}</a></td></tr>
+        <tr><td style="padding:8px 0;color:var(--text-muted);font-size:13px;">Manzil</td>
+          <td>{% if product.location_lat %}<a href="{{ product.get_location_url }}" target="_blank" class="btn btn-sm btn-info" style="font-size:12px;padding:4px 10px;">📍 Google Maps</a>{% else %}—{% endif %}</td></tr>
+        <tr><td style="padding:8px 0;color:var(--text-muted);font-size:13px;">Qo'shimcha</td>
+          <td>{{ product.description|default:"—" }}</td></tr>
+        <tr><td style="padding:8px 0;color:var(--text-muted);font-size:13px;">Qo'shgan</td>
+          <td>{{ product.telegram_full_name }} {% if product.telegram_username %}(@{{ product.telegram_username }}){% endif %}</td></tr>
+        <tr><td style="padding:8px 0;color:var(--text-muted);font-size:13px;">Sana</td>
+          <td>{{ product.created_at|date:"d.m.Y H:i" }}</td></tr>
+        {% if product.telegram_message_id %}
+        <tr><td style="padding:8px 0;color:var(--text-muted);font-size:13px;">Kanal xabar ID</td>
+          <td style="font-family:monospace;font-size:13px;">{{ product.telegram_message_id }}</td></tr>
+        {% endif %}
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
