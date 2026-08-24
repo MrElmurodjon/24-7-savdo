@@ -6,6 +6,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-fallback-key')
 DEBUG = config('DEBUG', default=True, cast=bool)
 ALLOWED_HOSTS = ['*']
+CSRF_TRUSTED_ORIGINS = ['https://savdo-24-7.uz', 'https://www.savdo-24-7.uz']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
