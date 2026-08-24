@@ -219,4 +219,4 @@ def run_bot():
 
     logger.info("🤖 Bot ishga tushmoqda...")
     app = create_application(token)
-    app.run_polling(drop_pending_updates=True)
+    app.run_polling(drop_pending_updates=True, stop_signals=None)
