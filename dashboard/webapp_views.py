@@ -15,7 +15,6 @@ def webapp_product_edit(request, pk):
         product.phone = request.POST.get('phone', product.phone)
         product.description = request.POST.get('description', product.description)
         
-        # Soni (quantity)
         qty = request.POST.get('quantity')
         if qty:
             try:
@@ -23,22 +22,23 @@ def webapp_product_edit(request, pk):
             except ValueError:
                 pass
                 
-        # Lokatsiya text
         loc = request.POST.get('location_text')
         if loc:
             product.location_text = loc
             
         product.save()
         
-        # Rasm (Image)
-        if 'image' in request.FILES:
+        images_updated = False
+        if 'image1' in request.FILES or 'image2' in request.FILES:
             from marketplace.models import ProductImage
-            # Delete old image if you only want 1, or just add. Let's delete old for simplicity
             product.images.all().delete()
-            ProductImage.objects.create(product=product, image=request.FILES['image'])
+            if 'image1' in request.FILES:
+                ProductImage.objects.create(product=product, image=request.FILES['image1'])
+            if 'image2' in request.FILES:
+                ProductImage.objects.create(product=product, image=request.FILES['image2'])
+            images_updated = True
         
-        # update channel if needed
-        from bot.channel import edit_product_in_channel
+        from bot.channel import edit_product_in_channel, delete_product_from_channel, send_product_to_channel
         from marketplace.models import BotSettings
         from telegram import Bot
         import asyncio
@@ -48,7 +48,16 @@ def webapp_product_edit(request, pk):
             bot = Bot(token=bot_settings.bot_token)
             images = product.images.all()
             try:
-                asyncio.run(edit_product_in_channel(bot, product, images))
+                if images_updated:
+                    # Rasm o'zgargan bo'lsa postni o'chirib qayta yuboramiz
+                    asyncio.run(delete_product_from_channel(bot, product))
+                    new_msg_id = asyncio.run(send_product_to_channel(bot, product, images))
+                    if new_msg_id:
+                        product.telegram_message_id = new_msg_id
+                        product.save()
+                else:
+                    # Faqat text o'zgargan
+                    asyncio.run(edit_product_in_channel(bot, product, images))
             except Exception:
                 pass
                 
