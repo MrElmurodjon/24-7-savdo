@@ -659,13 +659,12 @@ async def confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def my_products(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    from .utils import get_user_products
     products = await get_user_products(user_id)
-    from .keyboards import main_menu_keyboard, product_actions_keyboard
 
     if not products:
         await update.message.reply_text(
-            "🚫 Sizda hali mahsulot yo'q.\n➕ Mahsulot qo'shish tugmasini bosing!",
+            "🚫 Sizda hali mahsulot yo'q.
+➕ Mahsulot qo'shish tugmasini bosing!",
             reply_markup=main_menu_keyboard()
         )
         return
@@ -681,7 +680,6 @@ async def my_products(update: Update, context: ContextTypes.DEFAULT_TYPE):
         'parranda': '🐔', 'tuxum': '🥚'
     }
 
-    from asgiref.sync import sync_to_async
     for p in products:
         price_fmt = f"{int(p.price):,}".replace(',', ' ')
         icon = CAT_ICONS.get(p.category, '📦')
@@ -691,16 +689,24 @@ async def my_products(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             loc = p.location_text or "-"
             
-        qty = f"\n📦 Soni: {p.quantity} dona" if getattr(p, 'quantity', None) else ""
-        desc = f"\n📝 Qo'shimcha: {p.description}" if getattr(p, 'description', None) else ""
+        qty = f"
+📦 Soni: {p.quantity} dona" if getattr(p, 'quantity', None) else ""
+        desc = f"
+📝 Qo'shimcha: {p.description}" if getattr(p, 'description', None) else ""
 
-        sold_tag = "❌ <b>SOTILDI</b> ❌\n\n" if getattr(p, 'is_sold', False) else ""
+        sold_tag = "❌ <b>SOTILDI</b> ❌
+
+" if getattr(p, 'is_sold', False) else ""
         text = (
-            f"{sold_tag}{icon} <b>{p.name}</b>\n"
-            f"💰 Narxi: {price_fmt} so'm{qty}\n"
-            f"📞 Telefon: {p.phone}\n"
+            f"{sold_tag}{icon} <b>{p.name}</b>
+"
+            f"💰 Narxi: {price_fmt} so'm{qty}
+"
+            f"📞 Telefon: {p.phone}
+"
             f"📍 Manzil: {loc}"
-            f"{desc}\n"
+            f"{desc}
+"
             f"📅 Sana: {p.created_at.strftime('%d.%m.%Y')}"
         )
         
