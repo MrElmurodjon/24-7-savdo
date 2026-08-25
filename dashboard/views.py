@@ -432,3 +432,113 @@ def advanced_stats_view(request):
         'active_menu': 'advanced_stats',
     }
     return render(request, 'dashboard/advanced_stats.html', context)
+
+
+@login_required_custom
+def advanced_stats_detail(request):
+    """Batafsil mahsulotlarni JSON formatda qaytaradi"""
+    reg = request.GET.get('region', '')
+    dist = request.GET.get('district', '')
+    cat_display = request.GET.get('category', '') # e.g. "🌱 Ko'chat"
+    prod_name = request.GET.get('name', '')
+
+    # Reverse category display mapping
+    cat_code = None
+    for code, display in Product.CATEGORY_CHOICES:
+        if display == cat_display:
+            cat_code = code
+            break
+
+    qs = Product.objects.filter(is_active=True)
+    if reg != "Noma'lum hudud":
+        qs = qs.filter(region=reg)
+    else:
+        qs = qs.filter(Q(region='') | Q(region__isnull=True))
+        
+    if dist != "Noma'lum tuman":
+        qs = qs.filter(district=dist)
+    else:
+        qs = qs.filter(Q(district='') | Q(district__isnull=True))
+
+    if cat_code:
+        qs = qs.filter(category=cat_code)
+
+    # Nomi bo'yicha
+    if prod_name != "Noma'lum":
+        qs = qs.filter(Q(standardized_name__iexact=prod_name) | Q(name__iexact=prod_name))
+
+    data = []
+    for p in qs:
+        image_url = p.images.first().image.url if p.images.exists() else None
+        data.append({
+            'id': p.id,
+            'name': p.name,
+            'price': p.format_price(),
+            'phone': p.phone,
+            'location_text': p.location_text or '',
+            'created_at': p.created_at.strftime('%d.%m.%Y %H:%M'),
+            'image_url': image_url,
+            'edit_url': f'/dashboard/products/{p.id}/edit/',
+            'delete_url': f'/dashboard/products/{p.id}/delete/'
+        })
+
+    return JsonResponse({'status': 'ok', 'products': data})
+
+@login_required_custom
+def orchard_stats_view(request):
+    """Daraxt / Bog' statistikasi"""
+    from marketplace.models import OrchardRecord
+    records = OrchardRecord.objects.filter(is_active=True).order_by('region', 'district', 'tree_type')
+    
+    # Tree struktura: Viloyat -> Tuman -> Daraxt turi -> (records list, total yield)
+    tree = {}
+    total_trees = 0
+    total_yield = 0
+    
+    for r in records:
+        reg = r.region or "Noma'lum viloyat"
+        dist = r.district or "Noma'lum tuman"
+        tree_type = (r.tree_type or "Noma'lum").capitalize()
+        
+        if reg not in tree:
+            tree[reg] = {}
+        if dist not in tree[reg]:
+            tree[reg][dist] = {}
+        if tree_type not in tree[reg][dist]:
+            tree[reg][dist][tree_type] = {'records': [], 'total_count': 0, 'total_yield': 0}
+            
+        yld = r.get_estimated_yield_kg()
+        tree[reg][dist][tree_type]['records'].append({
+            'id': r.id,
+            'count': r.tree_count,
+            'age': r.tree_age,
+            'bearing_age': r.bearing_age,
+            'ready_month': r.get_ready_month_display_uz(),
+            'yield': yld,
+            'phone': r.phone,
+            'location': r.location_text or '',
+            'created_at': r.created_at.strftime('%d.%m.%Y'),
+        })
+        tree[reg][dist][tree_type]['total_count'] += r.tree_count
+        tree[reg][dist][tree_type]['total_yield'] += yld
+        
+        total_trees += r.tree_count
+        total_yield += yld
+        
+    context = {
+        'tree': tree,
+        'total_trees': total_trees,
+        'total_yield_tonnes': round(total_yield / 1000, 2),
+        'active_menu': 'orchard_stats'
+    }
+    return render(request, 'dashboard/orchard_stats.html', context)
+
+
+@login_required_custom
+@require_POST
+def orchard_delete(request, pk):
+    from marketplace.models import OrchardRecord
+    r = get_object_or_404(OrchardRecord, pk=pk)
+    r.is_active = False
+    r.save()
+    return redirect('dashboard:orchard_stats')

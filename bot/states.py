@@ -51,4 +51,15 @@
     TUXUM_PHOTOS,
 
     CONFIRM,
-) = range(38)
+
+    # Daraxt / Bog'
+    DARAXT_TYPE,
+    DARAXT_COUNT,
+    DARAXT_AGE,
+    DARAXT_BEARING_AGE,
+    DARAXT_READY_MONTH,
+    DARAXT_LOCATION,
+    DARAXT_PHONE,
+    DARAXT_DESCRIPTION,
+
+) = range(46)

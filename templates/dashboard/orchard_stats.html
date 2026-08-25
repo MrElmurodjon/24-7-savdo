@@ -1,0 +1,163 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Taxminiy Hosil - 24/7 Savdo{% endblock %}
+{% block page_title %}Taxminiy Hosil (Bog' va Daraxtlar){% endblock %}
+
+{% block content %}
+<div class="page-content fade-in-delay-1">
+    
+    <div class="alert alert-info">
+        <i class="fas fa-tree"></i>
+        Tizimda jami <strong>{{ total_trees }}</strong> ta daraxt ro'yxatga olingan. 
+        Taxminiy yillik hosil: <strong>{{ total_yield_tonnes }} tonna</strong>
+    </div>
+
+    <div class="card" style="padding: 20px;">
+        {% if tree %}
+            <ul class="tree-root">
+                {% for region, districts in tree.items %}
+                    <li class="tree-node">
+                        <div class="tree-item tree-region" onclick="toggleTree(this)">
+                            <i class="fas fa-chevron-right tree-icon"></i>
+                            <i class="fas fa-map-marker-alt"></i> {{ region }}
+                        </div>
+                        <ul class="tree-children" style="display: none;">
+                            {% for district, categories in districts.items %}
+                                <li class="tree-node">
+                                    <div class="tree-item tree-district" onclick="toggleTree(this)">
+                                        <i class="fas fa-chevron-right tree-icon"></i>
+                                        <i class="fas fa-city"></i> {{ district }}
+                                    </div>
+                                    <ul class="tree-children" style="display: none;">
+                                        {% for tree_type, data in categories.items %}
+                                            <li class="tree-node">
+                                                <div class="tree-item tree-category" onclick="toggleTree(this)" style="color:#e67e22;">
+                                                    <i class="fas fa-chevron-right tree-icon"></i>
+                                                    <i class="fas fa-apple-alt"></i> {{ tree_type }}
+                                                    <span style="margin-left:auto; font-size:13px; color:#555;">
+                                                        Jami: <b>{{ data.total_count }}</b> ta | Hosil: <b>{{ data.total_yield }}</b> kg
+                                                    </span>
+                                                </div>
+                                                <ul class="tree-children" style="display: none;">
+                                                    {% for r in data.records %}
+                                                        <li class="tree-node">
+                                                            <div class="tree-item tree-product" style="cursor:pointer;" 
+                                                                 data-id="{{ r.id }}"
+                                                                 data-count="{{ r.count }}"
+                                                                 data-age="{{ r.age }}"
+                                                                 data-bearing="{{ r.bearing_age }}"
+                                                                 data-month="{{ r.ready_month }}"
+                                                                 data-yield="{{ r.yield }}"
+                                                                 data-phone="{{ r.phone }}"
+                                                                 data-location="{{ r.location }}"
+                                                                 data-date="{{ r.created_at }}"
+                                                                 onclick="openOrchardModal(this, '{{ tree_type }}')">
+                                                                <span class="prod-bullet"></span>
+                                                                <span class="prod-name">{{ r.count }} ta {{ tree_type }}</span>
+                                                                <span class="badge badge-warning" style="background:#f39c12;color:#fff;">~{{ r.yield }} kg</span>
+                                                            </div>
+                                                        </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-tree empty-icon"></i>
+                <h3>Hech narsa topilmadi</h3>
+                <p>Tizimga hali daraxtlar qo'shilmagan.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+/* Daraxtsimon dizayn */
+.tree-root { list-style: none; padding: 0; margin: 0; }
+.tree-node { list-style: none; margin: 5px 0; }
+.tree-children { list-style: none; padding-left: 25px; border-left: 1px dashed var(--border); margin-left: 10px; margin-top: 5px; }
+.tree-item { padding: 10px 15px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; font-size: 14px; font-weight: 500; }
+.tree-item:hover { background: rgba(45, 122, 79, 0.05); border-color: var(--accent); }
+.tree-region { font-size: 16px; font-weight: 700; color: var(--primary); background: rgba(45, 122, 79, 0.08); }
+.tree-district { font-size: 15px; font-weight: 600; color: var(--text-secondary); }
+.tree-category { font-size: 14px; color: var(--info); }
+.tree-product { background: white; cursor: default; border-left: 3px solid #e67e22; justify-content: space-between; }
+.tree-icon { font-size: 12px; transition: transform 0.3s ease; color: var(--text-muted); }
+.tree-item.expanded .tree-icon { transform: rotate(90deg); }
+
+.stats-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 20px; }
+.stats-modal { background: white; width: 100%; max-width: 500px; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+.stats-modal-header { padding: 15px 20px; background: var(--bg-input); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.stats-modal-title { font-size: 18px; font-weight: 700; color: var(--primary); margin: 0; }
+.stats-modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); }
+.stats-modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+.info-row { display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+.info-label { color: #666; font-weight: 600; }
+.info-value { font-weight: 600; color: #333; }
+</style>
+
+<!-- Modal -->
+<div class="stats-modal-overlay" id="orchardModalOverlay" onclick="closeOrchardModal(event)">
+    <div class="stats-modal" onclick="event.stopPropagation()">
+        <div class="stats-modal-header">
+            <h3 class="stats-modal-title" id="orchardModalTitle">Bog' ma'lumotlari</h3>
+            <button class="stats-modal-close" onclick="closeOrchardModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="stats-modal-body" id="orchardModalBody">
+            <div class="info-row"><span class="info-label">Soni:</span> <span class="info-value" id="mdlCount"></span></div>
+            <div class="info-row"><span class="info-label">Yoshi:</span> <span class="info-value" id="mdlAge"></span></div>
+            <div class="info-row"><span class="info-label">Meva berishi:</span> <span class="info-value" id="mdlBearing"></span></div>
+            <div class="info-row"><span class="info-label">Tayyor bo'lishi:</span> <span class="info-value" id="mdlMonth"></span></div>
+            <div class="info-row"><span class="info-label">Taxminiy hosil:</span> <span class="info-value" style="color:#e67e22;" id="mdlYield"></span></div>
+            <div class="info-row"><span class="info-label">Telefon:</span> <span class="info-value" id="mdlPhone"></span></div>
+            <div class="info-row"><span class="info-label">Manzil:</span> <span class="info-value" id="mdlLocation"></span></div>
+            <div class="info-row" style="border:none;"><span class="info-label">Qo'shilgan sana:</span> <span class="info-value" id="mdlDate"></span></div>
+            
+            <form id="mdlDeleteForm" method="POST" style="margin-top:20px; text-align:right;" onsubmit="return confirm('Ochirishni tasdiqlaysizmi?');">
+                <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> O'chirish</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleTree(element) {
+    const childrenContainer = element.nextElementSibling;
+    if (childrenContainer && childrenContainer.classList.contains('tree-children')) {
+        const isHidden = childrenContainer.style.display === 'none';
+        childrenContainer.style.display = isHidden ? 'block' : 'none';
+        if (isHidden) { element.classList.add('expanded'); } 
+        else { element.classList.remove('expanded'); }
+    }
+}
+
+function openOrchardModal(el, typeName) {
+    document.getElementById('orchardModalTitle').innerText = typeName;
+    document.getElementById('mdlCount').innerText = el.getAttribute('data-count') + ' ta';
+    document.getElementById('mdlAge').innerText = el.getAttribute('data-age') + ' yillik';
+    document.getElementById('mdlBearing').innerText = el.getAttribute('data-bearing') + ' yoshdan';
+    document.getElementById('mdlMonth').innerText = el.getAttribute('data-month');
+    document.getElementById('mdlYield').innerText = '~' + el.getAttribute('data-yield') + ' kg';
+    document.getElementById('mdlPhone').innerText = el.getAttribute('data-phone');
+    document.getElementById('mdlLocation').innerText = el.getAttribute('data-location') || '-';
+    document.getElementById('mdlDate').innerText = el.getAttribute('data-date');
+    
+    document.getElementById('mdlDeleteForm').action = '/dashboard/orchard-stats/' + el.getAttribute('data-id') + '/delete/';
+    document.getElementById('orchardModalOverlay').style.display = 'flex';
+}
+
+function closeOrchardModal(e) {
+    if(!e || e.target.id === 'orchardModalOverlay' || e.target.closest('.stats-modal-close')) {
+        document.getElementById('orchardModalOverlay').style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

@@ -71,7 +71,12 @@
                                                 <ul class="tree-children" style="display: none;">
                                                     {% for prod_name, count in products.items %}
                                                         <li class="tree-node">
-                                                            <div class="tree-item tree-product">
+                                                            <div class="tree-item tree-product" style="cursor:pointer;" 
+                                                                 data-region="{{ region }}" 
+                                                                 data-district="{{ district }}" 
+                                                                 data-category="{{ category }}" 
+                                                                 data-name="{{ prod_name }}"
+                                                                 onclick="openProductModal(this)">
                                                                 <span class="prod-bullet"></span>
                                                                 <span class="prod-name">{{ prod_name }}</span>
                                                                 <span class="prod-count badge badge-active">{{ count }} ta e'lon</span>
@@ -155,7 +160,83 @@
 }
 .prod-name { font-weight: 600; color: var(--text-primary); }
 .mb-4 { margin-bottom: 20px; }
+
+/* Modal CSS */
+.stats-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+}
+.stats-modal {
+    background: white;
+    width: 100%;
+    max-width: 800px;
+    max-height: 90vh;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+.stats-modal-header {
+    padding: 15px 20px;
+    background: var(--bg-input);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.stats-modal-title { font-size: 18px; font-weight: 700; color: var(--primary); margin: 0; }
+.stats-modal-close {
+    background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);
+}
+.stats-modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+.modal-product-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    display: flex;
+    gap: 15px;
+    background: #fcfcfc;
+}
+.modal-product-img {
+    width: 100px; height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+    background: #eee;
+}
+.modal-product-info { flex: 1; }
+.modal-product-title { font-size: 16px; font-weight: 600; margin: 0 0 5px 0; }
+.modal-product-price { font-size: 15px; color: var(--accent); font-weight: 700; margin-bottom: 5px; }
+.modal-product-meta { font-size: 13px; color: var(--text-secondary); margin-bottom: 3px; }
+.modal-product-actions { margin-top: 10px; display: flex; gap: 10px; }
+.modal-product-actions a, .modal-product-actions form button {
+    font-size: 13px; padding: 5px 10px;
+}
 </style>
+
+<!-- Modal HTML -->
+<div class="stats-modal-overlay" id="statsModalOverlay" onclick="closeProductModal(event)">
+    <div class="stats-modal" onclick="event.stopPropagation()">
+        <div class="stats-modal-header">
+            <h3 class="stats-modal-title" id="statsModalTitle">Mahsulotlar</h3>
+            <button class="stats-modal-close" onclick="closeProductModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="stats-modal-body" id="statsModalBody">
+            <div style="text-align: center; padding: 40px; color: #888;">Yuklanmoqda...</div>
+        </div>
+    </div>
+</div>
 
 <script>
 function toggleTree(element) {
@@ -164,12 +245,70 @@ function toggleTree(element) {
         const isHidden = childrenContainer.style.display === 'none';
         childrenContainer.style.display = isHidden ? 'block' : 'none';
         
-        // Icon rotation
         if (isHidden) {
             element.classList.add('expanded');
         } else {
             element.classList.remove('expanded');
         }
+    }
+}
+
+function openProductModal(el) {
+    const reg = el.getAttribute('data-region');
+    const dist = el.getAttribute('data-district');
+    const cat = el.getAttribute('data-category');
+    const name = el.getAttribute('data-name');
+    
+    document.getElementById('statsModalTitle').innerText = `${name} (${dist})`;
+    document.getElementById('statsModalOverlay').style.display = 'flex';
+    const body = document.getElementById('statsModalBody');
+    body.innerHTML = '<div style="text-align: center; padding: 40px; color: #888;"><i class="fas fa-spinner fa-spin fa-2x"></i><br><br>Yuklanmoqda...</div>';
+    
+    const url = `/dashboard/advanced-stats/detail/?region=${encodeURIComponent(reg)}&district=${encodeURIComponent(dist)}&category=${encodeURIComponent(cat)}&name=${encodeURIComponent(name)}`;
+    
+    fetch(url)
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === 'ok' && data.products.length > 0) {
+                let html = '';
+                data.products.forEach(p => {
+                    const imgHtml = p.image_url 
+                        ? `<img src="${p.image_url}" class="modal-product-img">`
+                        : `<div class="modal-product-img" style="display:flex;align-items:center;justify-content:center;color:#ccc;"><i class="fas fa-image fa-2x"></i></div>`;
+                        
+                    html += `
+                        <div class="modal-product-card">
+                            ${imgHtml}
+                            <div class="modal-product-info">
+                                <h4 class="modal-product-title">${p.name}</h4>
+                                <div class="modal-product-price">${p.price} so'm</div>
+                                <div class="modal-product-meta"><i class="fas fa-phone"></i> ${p.phone}</div>
+                                <div class="modal-product-meta"><i class="fas fa-map-marker-alt"></i> ${p.location_text || 'Koordinata'}</div>
+                                <div class="modal-product-meta"><i class="fas fa-clock"></i> ${p.created_at}</div>
+                                <div class="modal-product-actions">
+                                    <a href="${p.edit_url}" class="btn btn-warning" style="padding: 4px 10px; font-size:12px;"><i class="fas fa-edit"></i> Tahrirlash</a>
+                                    <form action="${p.delete_url}" method="POST" style="margin:0;" onsubmit="return confirm('Ochirishni tasdiqlaysizmi?');">
+                                        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                                        <button type="submit" class="btn btn-danger" style="padding: 4px 10px; font-size:12px;"><i class="fas fa-trash"></i> O'chirish</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                body.innerHTML = html;
+            } else {
+                body.innerHTML = '<div style="text-align: center; padding: 40px; color: #888;">Mahsulotlar topilmadi.</div>';
+            }
+        })
+        .catch(err => {
+            body.innerHTML = '<div style="text-align: center; padding: 40px; color: red;">Xatolik yuz berdi.</div>';
+        });
+}
+
+function closeProductModal(e) {
+    if(!e || e.target.id === 'statsModalOverlay' || e.target.closest('.stats-modal-close')) {
+        document.getElementById('statsModalOverlay').style.display = 'none';
     }
 }
 </script>

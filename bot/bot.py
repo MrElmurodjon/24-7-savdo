@@ -40,6 +40,11 @@ from .handlers import (
     tuxum_location, tuxum_phone, tuxum_price, tuxum_photos,
     # Confirm
     confirm,
+    # Daraxt
+    daraxt_type, daraxt_count, daraxt_age, daraxt_bearing_age,
+    daraxt_ready_month, daraxt_location, daraxt_phone, daraxt_description,
+    # Callback
+    product_callback,
 )
 
 logging.basicConfig(
@@ -178,6 +183,21 @@ def create_application(token: str):
                 MessageHandler(filters.PHOTO, tuxum_photos),
                 MessageHandler(filters.TEXT & ~filters.COMMAND, tuxum_photos)
             ],
+            # Daraxt states
+            DARAXT_TYPE: [MessageHandler(filters.TEXT & ~filters.COMMAND, daraxt_type)],
+            DARAXT_COUNT: [MessageHandler(filters.TEXT & ~filters.COMMAND, daraxt_count)],
+            DARAXT_AGE: [MessageHandler(filters.TEXT & ~filters.COMMAND, daraxt_age)],
+            DARAXT_BEARING_AGE: [MessageHandler(filters.TEXT & ~filters.COMMAND, daraxt_bearing_age)],
+            DARAXT_READY_MONTH: [MessageHandler(filters.TEXT & ~filters.COMMAND, daraxt_ready_month)],
+            DARAXT_LOCATION: [
+                MessageHandler(filters.LOCATION, daraxt_location),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, daraxt_location)
+            ],
+            DARAXT_PHONE: [
+                MessageHandler(filters.CONTACT, daraxt_phone),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, daraxt_phone)
+            ],
+            DARAXT_DESCRIPTION: [MessageHandler(filters.TEXT & ~filters.COMMAND, daraxt_description)],
             # Confirm
             CONFIRM: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, confirm),
@@ -192,11 +212,13 @@ def create_application(token: str):
     )
 
     # Handlerlarni ro'yxatdan o'tkazish
+    from telegram.ext import CallbackQueryHandler
     app.add_handler(CommandHandler('start', start))
     app.add_handler(CommandHandler('help', help_command))
     app.add_handler(conv_handler)
     app.add_handler(MessageHandler(filters.Regex("📋 Mening mahsulotlarim"), my_products))
     app.add_handler(MessageHandler(filters.Regex("ℹ️ Yordam"), help_command))
+    app.add_handler(CallbackQueryHandler(product_callback))
 
     # Global error handler
     app.add_error_handler(error_handler)

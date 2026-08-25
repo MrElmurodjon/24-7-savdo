@@ -1,5 +1,10 @@
 from telegram import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
+MONTHS_UZ = {
+    1: 'Yanvar', 2: 'Fevral', 3: 'Mart', 4: 'Aprel',
+    5: 'May', 6: 'Iyun', 7: 'Iyul', 8: 'Avgust',
+    9: 'Sentabr', 10: 'Oktabr', 11: 'Noyabr', 12: 'Dekabr'
+}
 
 def main_menu_keyboard():
     """Asosiy menyu"""
@@ -16,6 +21,7 @@ def category_keyboard():
     keyboard = [
         [KeyboardButton("🌱 Ko'chat"), KeyboardButton("🍎 Meva/Mahsulot")],
         [KeyboardButton("🥕 Sabzavot"), KeyboardButton("🐔 Parranda")],
+        [KeyboardButton("🌳 Bog'/Daraxt")],
         [KeyboardButton("❌ Bekor qilish")],
     ]
     return ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=True)
@@ -73,3 +79,28 @@ def done_photos_keyboard():
         [KeyboardButton("❌ Bekor qilish")],
     ]
     return ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=False)
+
+
+def product_actions_keyboard(product_id):
+    """Mahsulot uchun inline tugmalar"""
+    keyboard = [
+        [
+            InlineKeyboardButton("✏️ Tahrirlash", callback_data=f"edit_{product_id}"),
+            InlineKeyboardButton("💵 Sotildi", callback_data=f"sold_{product_id}"),
+        ],
+        [
+            InlineKeyboardButton("🗑️ O'chirish", callback_data=f"delete_{product_id}"),
+        ]
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def confirm_delete_keyboard(product_id):
+    """O'chirishni tasdiqlash"""
+    keyboard = [
+        [
+            InlineKeyboardButton("✅ Ha, o'chirish", callback_data=f"confirm_delete_{product_id}"),
+            InlineKeyboardButton("❌ Yo'q", callback_data=f"cancel_delete_{product_id}"),
+        ]
+    ]
+    return InlineKeyboardMarkup(keyboard)

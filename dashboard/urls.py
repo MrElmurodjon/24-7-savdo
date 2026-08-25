@@ -15,4 +15,7 @@ urlpatterns = [
     path('dashboard/settings/', views.settings_view, name='settings'),
     path('dashboard/download-db/', views.download_database, name='download_db'),
     path('dashboard/advanced-stats/', views.advanced_stats_view, name='advanced_stats'),
+    path('dashboard/advanced-stats/detail/', views.advanced_stats_detail, name='advanced_stats_detail'),
+    path('dashboard/orchard-stats/', views.orchard_stats_view, name='orchard_stats'),
+    path('dashboard/orchard-stats/<int:pk>/delete/', views.orchard_delete, name='orchard_delete'),
 ]

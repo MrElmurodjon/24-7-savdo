@@ -196,6 +196,16 @@ async def choose_category(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return PARRANDA_CHOICE
 
+    elif "Bog'" in text or "Daraxt" in text:
+        user_data_store[user_id]['category'] = 'daraxt'
+        await update.message.reply_text(
+            "🌳 <b>Bog'/Daraxt (Taxminiy hosil hisobi)</b>\n\n"
+            "1️⃣ Qanday daraxt?\n<i>Masalan: Olma, Nok, Gilos...</i>",
+            parse_mode='HTML',
+            reply_markup=skip_keyboard()
+        )
+        return DARAXT_TYPE
+
     else:
         await update.message.reply_text("❗ Iltimos, quyidagi tugmalardan birini tanlang!")
         return CHOOSING_CATEGORY
@@ -560,54 +570,71 @@ async def confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("⏳ Ma'lumotlar saqlanmoqda...")
 
         try:
-            # Mahsulot yaratish
-            product = await create_product(
-                data, user_id,
-                update.effective_user.username,
-                update.effective_user.full_name,
-            )
-            logger.info(f"Mahsulot yaratildi: ID={product.id}, {product.name}")
-
-            # Rasmlarni saqlash (fayl sifatida + file_id)
-            images = []
-            photo_ids = data.get('photos', [])
-            photo_bytes_list = data.get('photo_bytes', [])
-
-            for i, file_id in enumerate(photo_ids):
-                pb = photo_bytes_list[i] if i < len(photo_bytes_list) else None
-                if pb:
-                    img = await save_product_image(product, pb, file_id, i)
-                else:
-                    # Faqat file_id bilan
-                    img = await save_product_image(product, b'', file_id, i)
-                images.append(img)
-
-            logger.info(f"Rasmlar saqlandi: {len(images)} ta")
-
-            # Kanalga yuborish
-            msg_id = await send_product_to_channel(context.bot, product, images)
-            if msg_id:
-                await save_product_message_id(product, msg_id)
-                logger.info(f"Kanalga yuborildi: msg_id={msg_id}")
-
-            channel_url = await get_channel_url()
-            channel_text = ""
-            if msg_id:
-                channel_text = "✅ Kanalga joylashtirildi\n"
-                if channel_url:
-                    channel_text += f"👀 Siz e'loningizni bu yerdagi kanaldan ko'rishingiz mumkin: {channel_url}\n"
+            if data.get('category') == 'daraxt':
+                orchard = await create_orchard(
+                    data, user_id,
+                    update.effective_user.username,
+                    update.effective_user.full_name,
+                )
+                logger.info(f"Daraxt qo'shildi: ID={orchard.id}")
+                
+                await update.message.reply_text(
+                    f"🎉 <b>Muvaffaqiyatli!</b>\n\n"
+                    f"✅ Bog' / Daraxt ma'lumotlari saqlandi.\n"
+                    f"Dashboarddagi Taxminiy Hosil bo'limida ko'rinadi.\n\n"
+                    f"Yana qo'shish uchun tugmani bosing 👇",
+                    parse_mode='HTML',
+                    reply_markup=main_menu_keyboard()
+                )
             else:
-                channel_text = "⚠️ Kanalga joylashtirishda xato (sozlamalarni tekshiring)\n"
+                # Mahsulot yaratish
+                product = await create_product(
+                    data, user_id,
+                    update.effective_user.username,
+                    update.effective_user.full_name,
+                )
+                logger.info(f"Mahsulot yaratildi: ID={product.id}, {product.name}")
 
-            await update.message.reply_text(
-                f"🎉 <b>Muvaffaqiyatli!</b>\n\n"
-                f"✅ Ma'lumotlar saqlandi\n"
-                f"{channel_text}\n"
-                f"Yana mahsulot qo'shish uchun tugmani bosing 👇",
-                parse_mode='HTML',
-                reply_markup=main_menu_keyboard(),
-                disable_web_page_preview=True
-            )
+                # Rasmlarni saqlash (fayl sifatida + file_id)
+                images = []
+                photo_ids = data.get('photos', [])
+                photo_bytes_list = data.get('photo_bytes', [])
+
+                for i, file_id in enumerate(photo_ids):
+                    pb = photo_bytes_list[i] if i < len(photo_bytes_list) else None
+                    if pb:
+                        img = await save_product_image(product, pb, file_id, i)
+                    else:
+                        # Faqat file_id bilan
+                        img = await save_product_image(product, b'', file_id, i)
+                    images.append(img)
+
+                logger.info(f"Rasmlar saqlandi: {len(images)} ta")
+
+                # Kanalga yuborish
+                msg_id = await send_product_to_channel(context.bot, product, images)
+                if msg_id:
+                    await save_product_message_id(product, msg_id)
+                    logger.info(f"Kanalga yuborildi: msg_id={msg_id}")
+
+                channel_url = await get_channel_url()
+                channel_text = ""
+                if msg_id:
+                    channel_text = "✅ Kanalga joylashtirildi\n"
+                    if channel_url:
+                        channel_text += f"👀 Siz e'loningizni bu yerdagi kanaldan ko'rishingiz mumkin: {channel_url}\n"
+                else:
+                    channel_text = "⚠️ Kanalga joylashtirishda xato (sozlamalarni tekshiring)\n"
+
+                await update.message.reply_text(
+                    f"🎉 <b>Muvaffaqiyatli!</b>\n\n"
+                    f"✅ Ma'lumotlar saqlandi\n"
+                    f"{channel_text}\n"
+                    f"Yana mahsulot qo'shish uchun tugmani bosing 👇",
+                    parse_mode='HTML',
+                    reply_markup=main_menu_keyboard(),
+                    disable_web_page_preview=True
+                )
 
         except Exception as e:
             logger.error(f"Saqlashda xato: {e}", exc_info=True)
@@ -636,13 +663,36 @@ async def my_products(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    text = "📋 <b>Sizning mahsulotlaringiz:</b>\n\n"
-    for i, p in enumerate(products, 1):
-        price_fmt = f"{int(p.price):,}".replace(',', ' ')
-        cat_display = "🌱 Ko'chat" if p.category == 'kochat' else "🍎 Meva"
-        text += f"{i}. {cat_display} — {p.name}\n   💰 {price_fmt} so'm | 📞 {p.phone}\n\n"
+    await update.message.reply_text(
+        f"📋 <b>Sizning mahsulotlaringiz:</b> {len(products)} ta",
+        parse_mode='HTML',
+        reply_markup=main_menu_keyboard()
+    )
 
-    await update.message.reply_text(text, parse_mode='HTML', reply_markup=main_menu_keyboard())
+    CAT_ICONS = {
+        'kochat': '🌱', 'meva': '🍎', 'sabzavot': '🥕',
+        'parranda': '🐔', 'tuxum': '🥚'
+    }
+
+    for p in products:
+        price_fmt = f"{int(p.price):,}".replace(',', ' ')
+        icon = CAT_ICONS.get(p.category, '📦')
+        loc = p.location_text or (f"📍 Koordinata bor" if p.location_lat else "—")
+        desc = f"\n📝 {p.description}" if p.description else ""
+
+        text = (
+            f"{icon} <b>{p.name}</b>\n"
+            f"💰 Narx: {price_fmt} so'm\n"
+            f"📞 Tel: {p.phone}\n"
+            f"📍 Manzil: {loc}"
+            f"{desc}\n"
+            f"🗓 {p.created_at.strftime('%d.%m.%Y')}"
+        )
+        await update.message.reply_text(
+            text,
+            parse_mode='HTML',
+            reply_markup=product_actions_keyboard(p.id)
+        )
 
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -917,3 +967,278 @@ async def tuxum_photos(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
              await update.message.reply_text(f"✅ {count}-rasm qabul qilindi. Yana 1 ta rasm yuboring.")
         return TUXUM_PHOTOS
+
+
+# ================= DARAXT / BOG' HANDLERS =================
+
+@sync_to_async
+def create_orchard(data, user_id, username, full_name):
+    from marketplace.models import OrchardRecord
+    from .utils import reverse_geocode
+    lat = data.get('location_lat')
+    lon = data.get('location_lon')
+    region, district = reverse_geocode(lat, lon)
+    return OrchardRecord.objects.create(
+        tree_type=data.get('tree_type', ''),
+        tree_count=data.get('tree_count', 1),
+        tree_age=data.get('tree_age', 1),
+        bearing_age=data.get('bearing_age', 1),
+        ready_month=data.get('ready_month', 1),
+        phone=data.get('phone', ''),
+        location_lat=lat,
+        location_lon=lon,
+        location_text=data.get('location_text', ''),
+        region=region,
+        district=district,
+        description=data.get('description', ''),
+        telegram_user_id=user_id,
+        telegram_username=username or '',
+        telegram_full_name=full_name or '',
+    )
+
+
+async def daraxt_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    text = update.message.text
+    if "❌" in text or "Bekor" in text:
+        return await cancel(update, context)
+    user_data_store[user_id]['tree_type'] = text
+    await update.message.reply_text(
+        "🔢 Nechta daraxt bor?\n<i>Faqat raqam yozing, masalan: 50</i>",
+        parse_mode='HTML', reply_markup=skip_keyboard()
+    )
+    return DARAXT_COUNT
+
+
+async def daraxt_count(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    text = update.message.text
+    if "❌" in text or "Bekor" in text:
+        return await cancel(update, context)
+    try:
+        user_data_store[user_id]['tree_count'] = int(text.replace(' ', ''))
+    except ValueError:
+        await update.message.reply_text("❗ Faqat raqam kiriting!")
+        return DARAXT_COUNT
+    await update.message.reply_text(
+        "📅 Daraxtlar necha yillik?\n<i>Faqat raqam, masalan: 5</i>",
+        parse_mode='HTML', reply_markup=skip_keyboard()
+    )
+    return DARAXT_AGE
+
+
+async def daraxt_age(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    text = update.message.text
+    if "❌" in text or "Bekor" in text:
+        return await cancel(update, context)
+    try:
+        user_data_store[user_id]['tree_age'] = int(text.replace(' ', ''))
+    except ValueError:
+        await update.message.reply_text("❗ Faqat raqam kiriting!")
+        return DARAXT_AGE
+    await update.message.reply_text(
+        "🌸 Daraxt necha yoshdan meva bera boshlaydi?\n<i>Masalan: 4</i>",
+        parse_mode='HTML', reply_markup=skip_keyboard()
+    )
+    return DARAXT_BEARING_AGE
+
+
+async def daraxt_bearing_age(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    text = update.message.text
+    if "❌" in text or "Bekor" in text:
+        return await cancel(update, context)
+    try:
+        user_data_store[user_id]['bearing_age'] = int(text.replace(' ', ''))
+    except ValueError:
+        await update.message.reply_text("❗ Faqat raqam kiriting!")
+        return DARAXT_BEARING_AGE
+    await update.message.reply_text(
+        "📅 Meva qaysi oyda to'liq tayyor bo'ladi?\n<i>Oy raqamini yozing: 1=Yanvar, 6=Iyun, 9=Sentabr...</i>",
+        parse_mode='HTML', reply_markup=skip_keyboard()
+    )
+    return DARAXT_READY_MONTH
+
+
+async def daraxt_ready_month(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    text = update.message.text
+    if "❌" in text or "Bekor" in text:
+        return await cancel(update, context)
+    try:
+        month = int(text.strip())
+        if not 1 <= month <= 12:
+            raise ValueError
+        user_data_store[user_id]['ready_month'] = month
+    except ValueError:
+        await update.message.reply_text("❗ 1 dan 12 gacha raqam kiriting (1=Yanvar, 12=Dekabr)!")
+        return DARAXT_READY_MONTH
+    await update.message.reply_text(
+        "📍 Joylashuvingizni yuboring (yoki matn shaklida yozing):",
+        reply_markup=location_keyboard()
+    )
+    return DARAXT_LOCATION
+
+
+async def daraxt_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    if update.message.text and ("❌" in update.message.text or "Bekor" in update.message.text):
+        return await cancel(update, context)
+    if update.message.location:
+        user_data_store[user_id]['location_lat'] = update.message.location.latitude
+        user_data_store[user_id]['location_lon'] = update.message.location.longitude
+    elif update.message.text:
+        user_data_store[user_id]['location_text'] = update.message.text
+    await update.message.reply_text(
+        "📞 Telefon raqamingizni yuboring:",
+        reply_markup=phone_keyboard()
+    )
+    return DARAXT_PHONE
+
+
+async def daraxt_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    if update.message.text and ("❌" in update.message.text or "Bekor" in update.message.text):
+        return await cancel(update, context)
+    if update.message.contact:
+        user_data_store[user_id]['phone'] = update.message.contact.phone_number
+    elif update.message.text:
+        user_data_store[user_id]['phone'] = update.message.text
+    await update.message.reply_text(
+        "📝 Qo'shimcha ma'lumot yozing (ixtiyoriy):",
+        reply_markup=skip_keyboard()
+    )
+    return DARAXT_DESCRIPTION
+
+
+async def daraxt_description(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    text = update.message.text
+    if "❌" in text or "Bekor" in text:
+        return await cancel(update, context)
+    if "O'tkazib" not in text:
+        user_data_store[user_id]['description'] = text
+
+    data = user_data_store.get(user_id, {})
+    months = {1:'Yanvar',2:'Fevral',3:'Mart',4:'Aprel',5:'May',6:'Iyun',
+              7:'Iyul',8:'Avgust',9:'Sentabr',10:'Oktabr',11:'Noyabr',12:'Dekabr'}
+    month_name = months.get(data.get('ready_month', 1), '?')
+
+    summary = (
+        f"📋 <b>Ma'lumotlarni tekshiring:</b>\n\n"
+        f"🌳 Daraxt turi: {data.get('tree_type', '—')}\n"
+        f"🔢 Soni: {data.get('tree_count', '—')} ta\n"
+        f"📅 Yoshi: {data.get('tree_age', '—')} yil\n"
+        f"🌸 Meva berish yoshi: {data.get('bearing_age', '—')} yoshdan\n"
+        f"📆 Meva tayyor oyi: {month_name}\n"
+        f"📞 Telefon: {data.get('phone', '—')}\n"
+        f"📍 Manzil: {'Bor ✅' if data.get('location_lat') else data.get('location_text', '—')}\n"
+        f"📝 Qo'shimcha: {data.get('description', '—')}"
+    )
+
+    await update.message.reply_text(summary, parse_mode='HTML', reply_markup=confirm_keyboard())
+    return CONFIRM
+
+
+# ================= CALLBACK QUERY HANDLERS (Sotildi / Edit / Delete) =================
+
+@sync_to_async
+def get_product_by_id(product_id):
+    from marketplace.models import Product
+    try:
+        return Product.objects.get(id=product_id)
+    except Product.DoesNotExist:
+        return None
+
+@sync_to_async
+def mark_product_sold(product_id):
+    from marketplace.models import Product
+    try:
+        p = Product.objects.get(id=product_id)
+        p.is_active = False
+        p.save(update_fields=['is_active'])
+        return p
+    except Product.DoesNotExist:
+        return None
+
+@sync_to_async
+def delete_product_db(product_id):
+    from marketplace.models import Product
+    try:
+        p = Product.objects.get(id=product_id)
+        p.delete()
+        return True
+    except Product.DoesNotExist:
+        return False
+
+
+async def product_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    data = query.data
+
+    if data.startswith("sold_"):
+        product_id = int(data.split("_")[1])
+        product = await mark_product_sold(product_id)
+        if product:
+            # Kanalda sotildi deb belgilash
+            from .channel import edit_product_in_channel, _get_channel_id
+            from telegram import Bot
+            from django.conf import settings as ds
+            from marketplace.models import BotSettings
+            settings = await sync_to_async(BotSettings.get_settings)()
+            token = settings.bot_token or ds.BOT_TOKEN
+            channel_id = await _get_channel_id()
+            if channel_id and product.telegram_message_id and token:
+                try:
+                    bot = context.bot
+                    from .channel import get_caption_for_product
+                    caption = get_caption_for_product(product)
+                    sold_caption = f"✅ <b>SOTILDI</b>\n\n{caption}"
+                    await bot.edit_message_caption(
+                        chat_id=channel_id,
+                        message_id=product.telegram_message_id,
+                        caption=sold_caption,
+                        parse_mode='HTML'
+                    )
+                except Exception as e:
+                    logger.error(f"Sotildi belgilashda xato: {e}")
+            await query.edit_message_reply_markup(reply_markup=None)
+            await query.message.reply_text(f"✅ <b>{product.name}</b> sotildi deb belgilandi!", parse_mode='HTML')
+        else:
+            await query.message.reply_text("❌ Mahsulot topilmadi.")
+
+    elif data.startswith("delete_"):
+        product_id = int(data.split("_")[1])
+        product = await get_product_by_id(product_id)
+        if product:
+            from .keyboards import confirm_delete_keyboard
+            await query.edit_message_reply_markup(reply_markup=confirm_delete_keyboard(product_id))
+        else:
+            await query.message.reply_text("❌ Mahsulot topilmadi.")
+
+    elif data.startswith("confirm_delete_"):
+        product_id = int(data.split("_")[2])
+        product = await get_product_by_id(product_id)
+        if product:
+            # Kanaldan o'chirish
+            from .channel import delete_product_from_channel
+            await delete_product_from_channel(context.bot, product)
+            name = product.name
+            await delete_product_db(product_id)
+            await query.edit_message_reply_markup(reply_markup=None)
+            await query.message.reply_text(f"🗑️ <b>{name}</b> o'chirildi.", parse_mode='HTML')
+        else:
+            await query.message.reply_text("❌ Mahsulot topilmadi.")
+
+    elif data.startswith("cancel_delete_"):
+        await query.edit_message_reply_markup(reply_markup=product_actions_keyboard(int(data.split("_")[2])))
+
+    elif data.startswith("edit_"):
+        product_id = int(data.split("_")[1])
+        await query.message.reply_text(
+            f"✏️ Mahsulotni tahrirlash uchun Dashboard ga o'ting:\n"
+            f"https://savdo-24-7.uz/dashboard/products/{product_id}/edit/",
+            disable_web_page_preview=True
+        )
