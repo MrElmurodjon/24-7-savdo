@@ -663,8 +663,7 @@ async def my_products(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if not products:
         await update.message.reply_text(
-            "🚫 Sizda hali mahsulot yo'q.
-➕ Mahsulot qo'shish tugmasini bosing!",
+            "📭 Sizda hali mahsulot yo'q.\n➕ Mahsulot qo'shish tugmasini bosing!",
             reply_markup=main_menu_keyboard()
         )
         return
@@ -683,62 +682,23 @@ async def my_products(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for p in products:
         price_fmt = f"{int(p.price):,}".replace(',', ' ')
         icon = CAT_ICONS.get(p.category, '📦')
-        
-        if getattr(p, 'location_lat', None) and getattr(p, 'location_lon', None):
-            loc = f"<a href='https://www.google.com/maps?q={p.location_lat},{p.location_lon}'>Manzilni ko'rish</a>"
-        else:
-            loc = p.location_text or "-"
-            
-        qty = f"
-📦 Soni: {p.quantity} dona" if getattr(p, 'quantity', None) else ""
-        desc = f"
-📝 Qo'shimcha: {p.description}" if getattr(p, 'description', None) else ""
+        loc = p.location_text or (f"📍 Koordinata bor" if p.location_lat else "—")
+        desc = f"\n📝 {p.description}" if p.description else ""
 
-        sold_tag = "❌ <b>SOTILDI</b> ❌
-
-" if getattr(p, 'is_sold', False) else ""
+        sold_tag = "❌ <b>SOTILDI</b> ❌\n\n" if getattr(p, 'is_sold', False) else ""
         text = (
-            f"{sold_tag}{icon} <b>{p.name}</b>
-"
-            f"💰 Narxi: {price_fmt} so'm{qty}
-"
-            f"📞 Telefon: {p.phone}
-"
+            f"{sold_tag}{icon} <b>{p.name}</b>\n"
+            f"💰 Narx: {price_fmt} so'm\n"
+            f"📞 Tel: {p.phone}\n"
             f"📍 Manzil: {loc}"
-            f"{desc}
-"
-            f"📅 Sana: {p.created_at.strftime('%d.%m.%Y')}"
+            f"{desc}\n"
+            f"📅 {p.created_at.strftime('%d.%m.%Y')}"
         )
-        
-        first_image = await sync_to_async(lambda p=p: p.images.first())()
-        if first_image and (getattr(first_image, 'telegram_file_id', None) or getattr(first_image, 'image', None)):
-            if getattr(first_image, 'telegram_file_id', None):
-                await update.message.reply_photo(
-                    photo=first_image.telegram_file_id,
-                    caption=text,
-                    parse_mode='HTML',
-                    reply_markup=product_actions_keyboard(p.id, getattr(p, 'is_sold', False))
-                )
-            else:
-                import os
-                if hasattr(first_image.image, 'path') and os.path.exists(first_image.image.path):
-                    with open(first_image.image.path, 'rb') as photo_file:
-                        await update.message.reply_photo(
-                            photo=photo_file,
-                            caption=text,
-                            parse_mode='HTML',
-                            reply_markup=product_actions_keyboard(p.id, getattr(p, 'is_sold', False))
-                        )
-                else:
-                    await update.message.reply_text(text, parse_mode='HTML', disable_web_page_preview=True, reply_markup=product_actions_keyboard(p.id, getattr(p, 'is_sold', False)))
-        else:
-            await update.message.reply_text(
-                text,
-                parse_mode='HTML',
-                disable_web_page_preview=True,
-                reply_markup=product_actions_keyboard(p.id, getattr(p, 'is_sold', False))
-            )
-
+        await update.message.reply_text(
+            text,
+            parse_mode='HTML',
+            reply_markup=product_actions_keyboard(p.id, p.is_sold)
+        )
 
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
