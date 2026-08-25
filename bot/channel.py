@@ -120,7 +120,8 @@ def get_caption_for_product(product):
         caption = format_meva_message(product)
         
     if product.is_sold:
-        return f"❌ <b>SOTILDI</b> ❌\n\n{caption}"
+        caption = caption.replace(' SOTILADI</b>', '</b>')
+        return f'\u274c <b>SOTILDI</b> \u274c\n\n{caption}'
     return caption
 
 async def send_product_to_channel(bot: Bot, product, images) -> int | None:

@@ -1204,11 +1204,10 @@ async def product_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     bot = context.bot
                     from .channel import get_caption_for_product
                     caption = get_caption_for_product(product)
-                    sold_caption = f"✅ <b>SOTILDI</b>\n\n{caption}"
                     await bot.edit_message_caption(
                         chat_id=channel_id,
                         message_id=product.telegram_message_id,
-                        caption=sold_caption,
+                        caption=caption,
                         parse_mode='HTML'
                     )
                 except Exception as e:
