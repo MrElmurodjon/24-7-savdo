@@ -14,7 +14,8 @@ def update_and_restart():
         client.connect(HOST, port=PORT, username=USER, password=PASSWORD, timeout=10)
         
         commands = [
-            f"cd /var/www/savdo247 && git pull origin main",
+            f"echo '{PASSWORD}' | sudo -S git config --global --add safe.directory /var/www/savdo247",
+            f"cd /var/www/savdo247 && echo '{PASSWORD}' | sudo -S git pull origin main",
             f"echo '{PASSWORD}' | sudo -S systemctl restart savdo247",
         ]
         
