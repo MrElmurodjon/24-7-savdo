@@ -163,66 +163,18 @@
 
 /* Modal CSS */
 .stats-modal-overlay {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.5);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    padding: 20px;
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 20px;
 }
 .stats-modal {
-    background: white;
-    width: 100%;
-    max-width: 800px;
-    max-height: 90vh;
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    background: white; width: 100%; max-width: 1000px; max-height: 90vh; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
 .stats-modal-header {
-    padding: 15px 20px;
-    background: var(--bg-input);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    padding: 15px 20px; background: var(--bg-input); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;
 }
 .stats-modal-title { font-size: 18px; font-weight: 700; color: var(--primary); margin: 0; }
-.stats-modal-close {
-    background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);
-}
-.stats-modal-body {
-    padding: 20px;
-    overflow-y: auto;
-    flex: 1;
-}
-.modal-product-card {
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 15px;
-    display: flex;
-    gap: 15px;
-    background: #fcfcfc;
-}
-.modal-product-img {
-    width: 100px; height: 100px;
-    object-fit: cover;
-    border-radius: 8px;
-    background: #eee;
-}
-.modal-product-info { flex: 1; }
-.modal-product-title { font-size: 16px; font-weight: 600; margin: 0 0 5px 0; }
-.modal-product-price { font-size: 15px; color: var(--accent); font-weight: 700; margin-bottom: 5px; }
-.modal-product-meta { font-size: 13px; color: var(--text-secondary); margin-bottom: 3px; }
-.modal-product-actions { margin-top: 10px; display: flex; gap: 10px; }
-.modal-product-actions a, .modal-product-actions form button {
-    font-size: 13px; padding: 5px 10px;
-}
+.stats-modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); }
+.stats-modal-body { padding: 20px; overflow-y: auto; flex: 1; }
 </style>
 
 <!-- Modal HTML -->
@@ -244,12 +196,8 @@ function toggleTree(element) {
     if (childrenContainer && childrenContainer.classList.contains('tree-children')) {
         const isHidden = childrenContainer.style.display === 'none';
         childrenContainer.style.display = isHidden ? 'block' : 'none';
-        
-        if (isHidden) {
-            element.classList.add('expanded');
-        } else {
-            element.classList.remove('expanded');
-        }
+        if (isHidden) { element.classList.add('expanded'); } 
+        else { element.classList.remove('expanded'); }
     }
 }
 
@@ -270,32 +218,48 @@ function openProductModal(el) {
         .then(res => res.json())
         .then(data => {
             if(data.status === 'ok' && data.products.length > 0) {
-                let html = '';
+                let html = `
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Rasm</th>
+                                <th>Nomi</th>
+                                <th>Narxi</th>
+                                <th>Telefon</th>
+                                <th>Sana</th>
+                                <th>Amallar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
                 data.products.forEach(p => {
                     const imgHtml = p.image_url 
-                        ? `<img src="${p.image_url}" class="modal-product-img">`
-                        : `<div class="modal-product-img" style="display:flex;align-items:center;justify-content:center;color:#ccc;"><i class="fas fa-image fa-2x"></i></div>`;
+                        ? `<img src="${p.image_url}" style="width:100%;height:100%;object-fit:cover;">`
+                        : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#ccc;"><i class="fas fa-image"></i></div>`;
                         
                     html += `
-                        <div class="modal-product-card">
-                            ${imgHtml}
-                            <div class="modal-product-info">
-                                <h4 class="modal-product-title">${p.name}</h4>
-                                <div class="modal-product-price">${p.price} so'm</div>
-                                <div class="modal-product-meta"><i class="fas fa-phone"></i> ${p.phone}</div>
-                                <div class="modal-product-meta"><i class="fas fa-map-marker-alt"></i> ${p.location_text || 'Koordinata'}</div>
-                                <div class="modal-product-meta"><i class="fas fa-clock"></i> ${p.created_at}</div>
-                                <div class="modal-product-actions">
-                                    <a href="${p.edit_url}" class="btn btn-warning" style="padding: 4px 10px; font-size:12px;"><i class="fas fa-edit"></i> Tahrirlash</a>
+                        <tr>
+                            <td style="color:var(--text-muted); font-size:13px;">${p.id}</td>
+                            <td><div style="width:48px;height:48px;border-radius:8px;overflow:hidden;border:1px solid var(--border);">${imgHtml}</div></td>
+                            <td class="product-name-cell"><a href="/dashboard/products/${p.id}/" style="font-weight:bold;color:var(--primary);">${p.name}</a></td>
+                            <td class="product-price-cell">${p.price} so'm</td>
+                            <td>${p.phone}</td>
+                            <td style="color:var(--text-muted); font-size:12px;">${p.created_at}</td>
+                            <td>
+                                <div style="display:flex;gap:6px;">
+                                    <a href="${p.edit_url}" class="btn btn-icon btn-warning" title="Tahrirlash" style="font-size:12px;padding:4px 8px;">✏️</a>
                                     <form action="${p.delete_url}" method="POST" style="margin:0;" onsubmit="return confirm('Ochirishni tasdiqlaysizmi?');">
                                         <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-                                        <button type="submit" class="btn btn-danger" style="padding: 4px 10px; font-size:12px;"><i class="fas fa-trash"></i> O'chirish</button>
+                                        <button type="submit" class="btn btn-icon btn-danger" title="O'chirish" style="font-size:12px;padding:4px 8px;">🗑️</button>
                                     </form>
                                 </div>
-                            </div>
-                        </div>
+                            </td>
+                        </tr>
                     `;
                 });
+                html += `</tbody></table></div>`;
                 body.innerHTML = html;
             } else {
                 body.innerHTML = '<div style="text-align: center; padding: 40px; color: #888;">Mahsulotlar topilmadi.</div>';

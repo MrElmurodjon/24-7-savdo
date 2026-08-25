@@ -21,7 +21,6 @@ def category_keyboard():
     keyboard = [
         [KeyboardButton("🌱 Ko'chat"), KeyboardButton("🍎 Meva/Mahsulot")],
         [KeyboardButton("🥕 Sabzavot"), KeyboardButton("🐔 Parranda")],
-        [KeyboardButton("🌳 Bog'/Daraxt")],
         [KeyboardButton("❌ Bekor qilish")],
     ]
     return ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=True)
