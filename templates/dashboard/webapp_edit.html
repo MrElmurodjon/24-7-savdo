@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tahrirlash</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #000); }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        input, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; background: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #000); }
+        button { width: 100%; padding: 12px; background: var(--tg-theme-button-color, #3390ec); color: var(--tg-theme-button-text-color, #fff); border: none; border-radius: 8px; font-size: 16px; font-weight: bold; margin-top: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <form method="POST">
+        <div class="form-group">
+            <label>Nomi</label>
+            <input type="text" name="name" value="{{ product.name }}" required>
+        </div>
+        <div class="form-group">
+            <label>Narxi</label>
+            <input type="number" name="price" value="{{ product.price|floatformat:0 }}" required>
+        </div>
+        <div class="form-group">
+            <label>Telefon</label>
+            <input type="text" name="phone" value="{{ product.phone }}" required>
+        </div>
+        <div class="form-group">
+            <label>Qo'shimcha ma'lumot</label>
+            <textarea name="description" rows="3">{{ product.description }}</textarea>
+        </div>
+        <button type="submit">Saqlash</button>
+    </form>
+    <script>
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+    </script>
+</body>
+</html>

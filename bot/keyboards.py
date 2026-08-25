@@ -1,4 +1,4 @@
-from telegram import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
 MONTHS_UZ = {
     1: 'Yanvar', 2: 'Fevral', 3: 'Mart', 4: 'Aprel',
@@ -89,7 +89,7 @@ def product_actions_keyboard(product_id, is_sold=False):
         
     keyboard = [
         [
-            InlineKeyboardButton("✏️ Tahrirlash", callback_data=f"edit_{product_id}"),
+            InlineKeyboardButton("?? Tahrirlash", web_app=WebAppInfo(url=f"https://savdo-24-7.uz/webapp/edit/{product_id}/")),
             sold_btn,
         ],
         [

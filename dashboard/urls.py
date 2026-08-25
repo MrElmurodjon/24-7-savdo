@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import webapp_views
 
 app_name = 'dashboard'
 
@@ -20,4 +21,5 @@ urlpatterns = [
     path('dashboard/advanced-stats/detail/', views.advanced_stats_detail, name='advanced_stats_detail'),
     path('dashboard/orchard-stats/', views.orchard_stats_view, name='orchard_stats'),
     path('dashboard/orchard-stats/<int:pk>/delete/', views.orchard_delete, name='orchard_delete'),
+    path('webapp/edit/<int:pk>/', webapp_views.webapp_product_edit, name='webapp_product_edit'),
 ]

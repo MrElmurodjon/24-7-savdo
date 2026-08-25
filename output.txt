@@ -1,0 +1,17 @@
+            name = product.name
+            await delete_product_db(product_id)
+            await query.edit_message_reply_markup(reply_markup=None)
+            await query.message.reply_text(f"🗑️ <b>{name}</b> o'chirildi.", parse_mode='HTML')
+        else:
+            await query.message.reply_text("❌ Mahsulot topilmadi.")
+
+    elif data.startswith("cancel_delete_"):
+        await query.edit_message_reply_markup(reply_markup=product_actions_keyboard(int(data.split("_")[2])))
+
+    elif data.startswith("edit_"):
+        product_id = int(data.split("_")[1])
+        await query.message.reply_text(
+            f"✏️ Mahsulotni tahrirlash uchun Dashboard ga o'ting:\n"
+            f"https://savdo-24-7.uz/dashboard/products/{product_id}/edit/",
+            disable_web_page_preview=True
+        )
