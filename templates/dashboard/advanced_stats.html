@@ -54,9 +54,6 @@
                             <i class="fas fa-chevron-right tree-icon"></i>
                             <i class="fas fa-map-marker-alt"></i> 
                             <span style="flex:1">{{ region }}</span>
-                            <button class="btn btn-sm btn-info" style="padding: 2px 8px; font-size: 11px;" 
-                                    data-region="{{ region }}" data-district="" data-category="" data-name="" 
-                                    onclick="openProductModal(this, event)">👁</button>
                         </div>
                         <ul class="tree-children" style="display: none;">
                             {% for district, categories in districts.items %}
@@ -65,9 +62,6 @@
                                         <i class="fas fa-chevron-right tree-icon"></i>
                                         <i class="fas fa-city"></i> 
                                         <span style="flex:1">{{ district }}</span>
-                                        <button class="btn btn-sm btn-info" style="padding: 2px 8px; font-size: 11px;" 
-                                                data-region="{{ region }}" data-district="{{ district }}" data-category="" data-name="" 
-                                                onclick="openProductModal(this, event)">👁</button>
                                     </div>
                                     <ul class="tree-children" style="display: none;">
                                         {% for category, products in categories.items %}
@@ -76,22 +70,68 @@
                                                     <i class="fas fa-chevron-right tree-icon"></i>
                                                     <i class="fas fa-folder-open"></i> 
                                                     <span style="flex:1">{{ category }}</span>
-                                                    <button class="btn btn-sm btn-info" style="padding: 2px 8px; font-size: 11px;" 
-                                                            data-region="{{ region }}" data-district="{{ district }}" data-category="{{ category }}" data-name="" 
-                                                            onclick="openProductModal(this, event)">👁</button>
                                                 </div>
                                                 <ul class="tree-children" style="display: none;">
-                                                    {% for prod_name, count in products.items %}
+                                                    {% for prod_name, prod_list in products.items %}
                                                         <li class="tree-node">
-                                                            <div class="tree-item tree-product" style="cursor:pointer;" 
-                                                                 data-region="{{ region }}" 
-                                                                 data-district="{{ district }}" 
-                                                                 data-category="{{ category }}" 
-                                                                 data-name="{{ prod_name }}"
-                                                                 onclick="openProductModal(this, event)">
-                                                                <span class="prod-bullet"></span>
+                                                            <div class="tree-item tree-product" onclick="toggleTree(this)">
+                                                                <i class="fas fa-chevron-right tree-icon"></i>
                                                                 <span class="prod-name" style="flex:1">{{ prod_name }}</span>
-                                                                <span class="prod-count badge badge-active">{{ count }} ta e'lon</span>
+                                                                <span class="prod-count badge badge-active">{{ prod_list|length }} ta e'lon</span>
+                                                            </div>
+                                                            <div class="tree-children" style="display: none;">
+                                                                <div class="table-wrapper" style="margin: 10px 0;">
+                                                                    <table>
+                                                                        <thead>
+                                                                            <tr>
+                                                                                <th>Rasm</th>
+                                                                                <th>Nomi</th>
+                                                                                <th>Narxi</th>
+                                                                                <th>Telefon</th>
+                                                                                <th>Manzil</th>
+                                                                                <th>Sana</th>
+                                                                                <th>Amallar</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                        {% for p in prod_list %}
+                                                                            <tr>
+                                                                                <td>
+                                                                                    {% with p.images.first as img %}
+                                                                                    {% if img and img.image %}
+                                                                                        <div style="width:48px;height:48px;border-radius:8px;overflow:hidden;border:1px solid var(--border);">
+                                                                                            <img src="{{ img.image.url }}" style="width:100%;height:100%;object-fit:cover;">
+                                                                                        </div>
+                                                                                    {% else %}
+                                                                                        <div style="width:48px;height:48px;border-radius:8px;background:rgba(82,183,136,0.1);display:flex;align-items:center;justify-content:center;font-size:22px;">
+                                                                                            <i class="fas fa-image" style="color:#ccc"></i>
+                                                                                        </div>
+                                                                                    {% endif %}
+                                                                                    {% endwith %}
+                                                                                </td>
+                                                                                <td class="product-name-cell"><a href="{% url 'dashboard:product_detail' p.pk %}" style="font-weight:bold;color:var(--primary);">{{ p.name }}</a></td>
+                                                                                <td class="product-price-cell">{{ p.format_price }} so'm</td>
+                                                                                <td>{{ p.phone }}</td>
+                                                                                <td>
+                                                                                    {% if p.location_lat and p.location_lon %}
+                                                                                        <a href="https://www.google.com/maps?q={{ p.location_lat }},{{ p.location_lon }}" target="_blank" class="btn btn-sm btn-info" style="padding:4px 10px;font-size:11px;">📍 Ko'rish</a>
+                                                                                    {% else %}—{% endif %}
+                                                                                </td>
+                                                                                <td style="color:var(--text-muted); font-size:12px;">{{ p.created_at|date:"d.m.Y H:i" }}</td>
+                                                                                <td>
+                                                                                    <div style="display:flex;gap:6px;">
+                                                                                        <a href="{% url 'dashboard:product_edit' p.pk %}" class="btn btn-icon btn-warning" title="Tahrirlash" style="font-size:12px;padding:4px 8px;">✏️</a>
+                                                                                        <form action="{% url 'dashboard:product_delete' p.pk %}" method="POST" style="margin:0;" onsubmit="return confirm('Ochirishni tasdiqlaysizmi?');">
+                                                                                            {% csrf_token %}
+                                                                                            <button type="submit" class="btn btn-icon btn-danger" title="O'chirish" style="font-size:12px;padding:4px 8px;">🗑️</button>
+                                                                                        </form>
+                                                                                    </div>
+                                                                                </td>
+                                                                            </tr>
+                                                                        {% endfor %}
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
                                                             </div>
                                                         </li>
                                                     {% endfor %}
@@ -172,35 +212,7 @@
 }
 .prod-name { font-weight: 600; color: var(--text-primary); }
 .mb-4 { margin-bottom: 20px; }
-
-/* Modal CSS */
-.stats-modal-overlay {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 20px;
-}
-.stats-modal {
-    background: white; width: 100%; max-width: 1000px; max-height: 90vh; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-}
-.stats-modal-header {
-    padding: 15px 20px; background: var(--bg-input); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;
-}
-.stats-modal-title { font-size: 18px; font-weight: 700; color: var(--primary); margin: 0; }
-.stats-modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); }
-.stats-modal-body { padding: 20px; overflow-y: auto; flex: 1; }
 </style>
-
-<!-- Modal HTML -->
-<div class="stats-modal-overlay" id="statsModalOverlay" onclick="closeProductModal(event)">
-    <div class="stats-modal" onclick="event.stopPropagation()">
-        <div class="stats-modal-header">
-            <h3 class="stats-modal-title" id="statsModalTitle">Mahsulotlar</h3>
-            <button class="stats-modal-close" onclick="closeProductModal()"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="stats-modal-body" id="statsModalBody">
-            <div style="text-align: center; padding: 40px; color: #888;">Yuklanmoqda...</div>
-        </div>
-    </div>
-</div>
 
 <script>
 function toggleTree(element) {
@@ -210,103 +222,6 @@ function toggleTree(element) {
         childrenContainer.style.display = isHidden ? 'block' : 'none';
         if (isHidden) { element.classList.add('expanded'); } 
         else { element.classList.remove('expanded'); }
-    }
-}
-
-function openProductModal(el, event) {
-    if (event) event.stopPropagation();
-    
-    const reg = el.getAttribute('data-region');
-    const dist = el.getAttribute('data-district');
-    const cat = el.getAttribute('data-category');
-    const name = el.getAttribute('data-name');
-    
-    let title = [];
-    if (name) title.push(name);
-    else if (cat) title.push(cat);
-    else title.push("Barcha mahsulotlar");
-    
-    let subtitle = [];
-    if (dist) subtitle.push(dist);
-    else if (reg) subtitle.push(reg);
-    
-    let fullTitle = title.join(' ');
-    if (subtitle.length > 0) {
-        fullTitle += ` (${subtitle.join(', ')})`;
-    }
-    
-    document.getElementById('statsModalTitle').innerText = fullTitle;
-    document.getElementById('statsModalOverlay').style.display = 'flex';
-    const body = document.getElementById('statsModalBody');
-    body.innerHTML = '<div style="text-align: center; padding: 40px; color: #888;"><i class="fas fa-spinner fa-spin fa-2x"></i><br><br>Yuklanmoqda...</div>';
-    
-    const url = `/dashboard/advanced-stats/detail/?region=${encodeURIComponent(reg)}&district=${encodeURIComponent(dist)}&category=${encodeURIComponent(cat)}&name=${encodeURIComponent(name)}`;
-    
-    fetch(url)
-        .then(res => res.json())
-        .then(data => {
-            if(data.status === 'ok' && data.products.length > 0) {
-                let html = `
-                <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Rasm</th>
-                                <th>Nomi</th>
-                                <th>Narxi</th>
-                                <th>Telefon</th>
-                                <th>Manzil</th>
-                                <th>Sana</th>
-                                <th>Amallar</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-                data.products.forEach(p => {
-                    const imgHtml = p.image_url 
-                        ? `<img src="${p.image_url}" style="width:100%;height:100%;object-fit:cover;">`
-                        : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#ccc;"><i class="fas fa-image"></i></div>`;
-                    
-                    const mapHtml = (p.location_lat && p.location_lon)
-                        ? `<a href="https://www.google.com/maps?q=${p.location_lat},${p.location_lon}" target="_blank" class="btn btn-sm btn-info" style="padding:4px 10px;font-size:11px;">📍 Ko'rish</a>`
-                        : `—`;
-                        
-                    html += `
-                        <tr>
-                            <td style="color:var(--text-muted); font-size:13px;">${p.id}</td>
-                            <td><div style="width:48px;height:48px;border-radius:8px;overflow:hidden;border:1px solid var(--border);">${imgHtml}</div></td>
-                            <td class="product-name-cell"><a href="/dashboard/products/${p.id}/" style="font-weight:bold;color:var(--primary);">${p.name}</a></td>
-                            <td class="product-price-cell">${p.price} so'm</td>
-                            <td>${p.phone}</td>
-                            <td>${mapHtml}</td>
-                            <td style="color:var(--text-muted); font-size:12px;">${p.created_at}</td>
-                            <td>
-                                <div style="display:flex;gap:6px;">
-                                    <a href="${p.edit_url}" class="btn btn-icon btn-warning" title="Tahrirlash" style="font-size:12px;padding:4px 8px;">✏️</a>
-                                    <form action="${p.delete_url}" method="POST" style="margin:0;" onsubmit="return confirm('Ochirishni tasdiqlaysizmi?');">
-                                        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-                                        <button type="submit" class="btn btn-icon btn-danger" title="O'chirish" style="font-size:12px;padding:4px 8px;">🗑️</button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                });
-                html += `</tbody></table></div>`;
-                body.innerHTML = html;
-            } else {
-                body.innerHTML = '<div style="text-align: center; padding: 40px; color: #888;">Mahsulotlar topilmadi.</div>';
-            }
-        })
-        .catch(err => {
-            body.innerHTML = '<div style="text-align: center; padding: 40px; color: red;">Xatolik yuz berdi.</div>';
-        });
-}
-
-function closeProductModal(e) {
-    if(!e || e.target.id === 'statsModalOverlay' || e.target.closest('.stats-modal-close')) {
-        document.getElementById('statsModalOverlay').style.display = 'none';
     }
 }
 </script>

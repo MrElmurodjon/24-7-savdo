@@ -417,9 +417,9 @@ def advanced_stats_view(request):
         if cat not in tree[reg][dist]:
             tree[reg][dist][cat] = {}
         if prod_name not in tree[reg][dist][cat]:
-            tree[reg][dist][cat][prod_name] = 0
+            tree[reg][dist][cat][prod_name] = []
             
-        tree[reg][dist][cat][prod_name] += 1
+        tree[reg][dist][cat][prod_name].append(p)
         total_count += 1
         
     context = {

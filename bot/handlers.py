@@ -60,7 +60,7 @@ def create_product(data, user_id, username, full_name):
 
     product = Product.objects.create(
         category=data.get('category', 'meva'),
-        name=original_name,
+        name=std_name, # <-- Asl ismni ham to'g'rilanganiga almashtiramiz
         standardized_name=std_name,
         price=data.get('price', 0),
         quantity=data.get('quantity'),
