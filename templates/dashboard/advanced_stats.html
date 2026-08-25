@@ -52,21 +52,33 @@
                     <li class="tree-node">
                         <div class="tree-item tree-region" onclick="toggleTree(this)">
                             <i class="fas fa-chevron-right tree-icon"></i>
-                            <i class="fas fa-map-marker-alt"></i> {{ region }}
+                            <i class="fas fa-map-marker-alt"></i> 
+                            <span style="flex:1">{{ region }}</span>
+                            <button class="btn btn-sm btn-info" style="padding: 2px 8px; font-size: 11px;" 
+                                    data-region="{{ region }}" data-district="" data-category="" data-name="" 
+                                    onclick="openProductModal(this, event)">👁</button>
                         </div>
                         <ul class="tree-children" style="display: none;">
                             {% for district, categories in districts.items %}
                                 <li class="tree-node">
                                     <div class="tree-item tree-district" onclick="toggleTree(this)">
                                         <i class="fas fa-chevron-right tree-icon"></i>
-                                        <i class="fas fa-city"></i> {{ district }}
+                                        <i class="fas fa-city"></i> 
+                                        <span style="flex:1">{{ district }}</span>
+                                        <button class="btn btn-sm btn-info" style="padding: 2px 8px; font-size: 11px;" 
+                                                data-region="{{ region }}" data-district="{{ district }}" data-category="" data-name="" 
+                                                onclick="openProductModal(this, event)">👁</button>
                                     </div>
                                     <ul class="tree-children" style="display: none;">
                                         {% for category, products in categories.items %}
                                             <li class="tree-node">
                                                 <div class="tree-item tree-category" onclick="toggleTree(this)">
                                                     <i class="fas fa-chevron-right tree-icon"></i>
-                                                    <i class="fas fa-folder-open"></i> {{ category }}
+                                                    <i class="fas fa-folder-open"></i> 
+                                                    <span style="flex:1">{{ category }}</span>
+                                                    <button class="btn btn-sm btn-info" style="padding: 2px 8px; font-size: 11px;" 
+                                                            data-region="{{ region }}" data-district="{{ district }}" data-category="{{ category }}" data-name="" 
+                                                            onclick="openProductModal(this, event)">👁</button>
                                                 </div>
                                                 <ul class="tree-children" style="display: none;">
                                                     {% for prod_name, count in products.items %}
@@ -76,9 +88,9 @@
                                                                  data-district="{{ district }}" 
                                                                  data-category="{{ category }}" 
                                                                  data-name="{{ prod_name }}"
-                                                                 onclick="openProductModal(this)">
+                                                                 onclick="openProductModal(this, event)">
                                                                 <span class="prod-bullet"></span>
-                                                                <span class="prod-name">{{ prod_name }}</span>
+                                                                <span class="prod-name" style="flex:1">{{ prod_name }}</span>
                                                                 <span class="prod-count badge badge-active">{{ count }} ta e'lon</span>
                                                             </div>
                                                         </li>
@@ -201,13 +213,29 @@ function toggleTree(element) {
     }
 }
 
-function openProductModal(el) {
+function openProductModal(el, event) {
+    if (event) event.stopPropagation();
+    
     const reg = el.getAttribute('data-region');
     const dist = el.getAttribute('data-district');
     const cat = el.getAttribute('data-category');
     const name = el.getAttribute('data-name');
     
-    document.getElementById('statsModalTitle').innerText = `${name} (${dist})`;
+    let title = [];
+    if (name) title.push(name);
+    else if (cat) title.push(cat);
+    else title.push("Barcha mahsulotlar");
+    
+    let subtitle = [];
+    if (dist) subtitle.push(dist);
+    else if (reg) subtitle.push(reg);
+    
+    let fullTitle = title.join(' ');
+    if (subtitle.length > 0) {
+        fullTitle += ` (${subtitle.join(', ')})`;
+    }
+    
+    document.getElementById('statsModalTitle').innerText = fullTitle;
     document.getElementById('statsModalOverlay').style.display = 'flex';
     const body = document.getElementById('statsModalBody');
     body.innerHTML = '<div style="text-align: center; padding: 40px; color: #888;"><i class="fas fa-spinner fa-spin fa-2x"></i><br><br>Yuklanmoqda...</div>';

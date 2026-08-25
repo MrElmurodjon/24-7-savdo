@@ -450,22 +450,27 @@ def advanced_stats_detail(request):
             break
 
     qs = Product.objects.filter(is_active=True)
-    if reg != "Noma'lum hudud":
-        qs = qs.filter(region=reg)
-    else:
-        qs = qs.filter(Q(region='') | Q(region__isnull=True))
-        
-    if dist != "Noma'lum tuman":
-        qs = qs.filter(district=dist)
-    else:
-        qs = qs.filter(Q(district='') | Q(district__isnull=True))
+    
+    if reg:
+        if reg != "Noma'lum hudud":
+            qs = qs.filter(region=reg)
+        else:
+            qs = qs.filter(Q(region='') | Q(region__isnull=True))
+            
+    if dist:
+        if dist != "Noma'lum tuman":
+            qs = qs.filter(district=dist)
+        else:
+            qs = qs.filter(Q(district='') | Q(district__isnull=True))
 
     if cat_code:
         qs = qs.filter(category=cat_code)
 
-    # Nomi bo'yicha
-    if prod_name != "Noma'lum":
-        qs = qs.filter(Q(standardized_name__iexact=prod_name) | Q(name__iexact=prod_name))
+    if prod_name:
+        if prod_name != "Noma'lum":
+            qs = qs.filter(Q(standardized_name__iexact=prod_name) | Q(name__iexact=prod_name))
+        else:
+            qs = qs.filter(Q(standardized_name='') | Q(standardized_name__isnull=True), Q(name='') | Q(name__isnull=True))
 
     data = []
     for p in qs:

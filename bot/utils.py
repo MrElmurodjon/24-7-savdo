@@ -13,26 +13,50 @@ STANDARD_PRODUCTS = [
     "terak", "qora terak", "gullar", "atirgul", "archa", "limon", "apelsin", "mandarin"
 ]
 
-def standardize_product_name(input_name, threshold=70):
+def cyrillic_to_latin(text):
+    mapping = {
+        'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ё': 'Yo', 'Ж': 'J', 'З': 'Z',
+        'И': 'I', 'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M', 'Н': 'N', 'О': 'O', 'П': 'P', 'Р': 'R',
+        'С': 'S', 'Т': 'T', 'У': 'U', 'Ф': 'F', 'Х': 'X', 'Ц': 'Ts', 'Ч': 'Ch', 'Ш': 'Sh', 'Щ': 'Shch',
+        'Ъ': "'", 'Ы': 'Y', 'Ь': '', 'Э': 'E', 'Ю': 'Yu', 'Я': 'Ya', 'Ў': "O'", 'Қ': 'Q', 'Ғ': "G'", 'Ҳ': 'H',
+        'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo', 'ж': 'j', 'з': 'z',
+        'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r',
+        'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'x', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'shch',
+        'ъ': "'", 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya', 'ў': "o'", 'қ': 'q', 'ғ': "g'", 'ҳ': 'h'
+    }
+    for cyr, lat in mapping.items():
+        text = text.replace(cyr, lat)
+    return text
+
+def standardize_product_name(input_name, threshold=60):
     """
     Kiritilgan nomni standartlashtiradi (Fuzzy matching).
-    Kiritilgan so'z STANDARD_PRODUCTS ichidagilardan biriga o'xshasa, o'shani qaytaradi.
-    Agar o'xshashlik threshold dan past bo'lsa, asli qanday bo'lsa shunday qaytaradi.
+    Krillchani lotinchaga o'girib keyin tekshiradi.
     """
     if not input_name:
         return ""
     
-    input_lower = input_name.lower().strip()
+    # Krillchani lotinchaga o'tkazish
+    latin_name = cyrillic_to_latin(input_name)
+    input_lower = latin_name.lower().strip()
     
-    # O'zbek lotin harflari uchun kichik normallashtirish (o' -> o, g' -> g) 
-    # Bu thefuzz ishlashini yaxshilaydi, lekin TheFuzz o'zi ham eplaydi.
+    # 'x' va 'h' xatolarini ham kamaytirish uchun qisqa almashtirish
+    input_lower_normalized = input_lower.replace('x', 'h')
     
-    best_match = process.extractOne(input_lower, STANDARD_PRODUCTS, scorer=fuzz.token_sort_ratio)
+    best_match = None
+    best_score = 0
     
-    if best_match and best_match[1] >= threshold:
-        return best_match[0].capitalize()
+    for prod in STANDARD_PRODUCTS:
+        prod_norm = prod.lower().replace('x', 'h')
+        score = fuzz.token_sort_ratio(input_lower_normalized, prod_norm)
+        if score > best_score:
+            best_score = score
+            best_match = prod
+            
+    if best_match and best_score >= threshold:
+        return best_match.capitalize()
     
-    return input_name.capitalize()
+    return latin_name.capitalize()
 
 def reverse_geocode(lat, lon):
     """
