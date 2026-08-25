@@ -476,6 +476,8 @@ def advanced_stats_detail(request):
             'price': p.format_price(),
             'phone': p.phone,
             'location_text': p.location_text or '',
+            'location_lat': p.location_lat,
+            'location_lon': p.location_lon,
             'created_at': p.created_at.strftime('%d.%m.%Y %H:%M'),
             'image_url': image_url,
             'edit_url': f'/dashboard/products/{p.id}/edit/',

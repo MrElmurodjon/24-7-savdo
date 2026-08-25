@@ -228,6 +228,7 @@ function openProductModal(el) {
                                 <th>Nomi</th>
                                 <th>Narxi</th>
                                 <th>Telefon</th>
+                                <th>Manzil</th>
                                 <th>Sana</th>
                                 <th>Amallar</th>
                             </tr>
@@ -238,6 +239,10 @@ function openProductModal(el) {
                     const imgHtml = p.image_url 
                         ? `<img src="${p.image_url}" style="width:100%;height:100%;object-fit:cover;">`
                         : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#ccc;"><i class="fas fa-image"></i></div>`;
+                    
+                    const mapHtml = (p.location_lat && p.location_lon)
+                        ? `<a href="https://www.google.com/maps?q=${p.location_lat},${p.location_lon}" target="_blank" class="btn btn-sm btn-info" style="padding:4px 10px;font-size:11px;">📍 Ko'rish</a>`
+                        : `—`;
                         
                     html += `
                         <tr>
@@ -246,6 +251,7 @@ function openProductModal(el) {
                             <td class="product-name-cell"><a href="/dashboard/products/${p.id}/" style="font-weight:bold;color:var(--primary);">${p.name}</a></td>
                             <td class="product-price-cell">${p.price} so'm</td>
                             <td>${p.phone}</td>
+                            <td>${mapHtml}</td>
                             <td style="color:var(--text-muted); font-size:12px;">${p.created_at}</td>
                             <td>
                                 <div style="display:flex;gap:6px;">
