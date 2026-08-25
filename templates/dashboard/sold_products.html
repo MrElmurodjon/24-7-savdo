@@ -1,6 +1,6 @@
 {% extends 'dashboard/base.html' %}
 
-{% block title %}Sotilganlar — 24/7 Savdo{% endblock %}
+{% block title %}Sotilganlar - 24/7 Savdo{% endblock %}
 {% block page_title %}? Sotilganlar{% endblock %}
 
 {% block content %}
@@ -90,7 +90,7 @@
           <td>
             {% if p.location_lat %}
             <a href="https://www.google.com/maps?q={{ p.location_lat }},{{ p.location_lon }}" target="_blank" class="btn btn-sm btn-info" style="padding:4px 10px;font-size:11px;">?? Ko'rish</a>
-            {% else %}—{% endif %}
+            {% else %}-{% endif %}
           </td>
           <td style="color:var(--text-muted); font-size:12px;">{{ p.sold_at|date:"d.m.Y H:i" }}</td>
           <td>
