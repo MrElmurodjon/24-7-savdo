@@ -28,6 +28,7 @@ def format_kochat_message(product):
     age = f"\n📅 Yoshi: {product.age}" if product.age else ""
     desc = f"\n\n📝 Qo'shimcha: {product.description}" if product.description else ""
     location_text = _get_location_text(product)
+    qty = f"\n📦 <b>Miqdori:</b> {product.quantity} kg" if getattr(product, 'quantity', None) else ""
     date_str = product.created_at.strftime("%d.%m.%Y")
 
     return f"""🌱 <b>KO'CHAT SOTILADI</b>
@@ -44,12 +45,13 @@ def format_meva_message(product):
     price_formatted = f"{int(product.price):,}".replace(',', ' ')
     desc = f"\n\n📝 Qo'shimcha: {product.description}" if product.description else ""
     location_text = _get_location_text(product)
+    qty = f"\n📦 <b>Miqdori:</b> {product.quantity} kg" if getattr(product, 'quantity', None) else ""
     date_str = product.created_at.strftime("%d.%m.%Y")
 
     return f"""🍎 <b>MEVA/MAHSULOT SOTILADI</b>
 
 🌾 <b>Turi:</b> {product.name}
-💰 <b>Narxi:</b> {price_formatted} so'm/kg{location_text}
+💰 <b>Narxi:</b> {price_formatted} so'm/kg{qty}{location_text}
 📞 <b>Telefon:</b> {product.phone}{desc}
 
 🕐 <i>Sana: {date_str}</i>
@@ -60,6 +62,7 @@ def format_sabzavot_message(product):
     price_formatted = f"{int(product.price):,}".replace(',', ' ')
     desc = f"\n\n📝 Qo'shimcha: {product.description}" if product.description else ""
     location_text = _get_location_text(product)
+    qty = f"\n📦 <b>Miqdori:</b> {product.quantity} kg" if getattr(product, 'quantity', None) else ""
     date_str = product.created_at.strftime("%d.%m.%Y")
 
     return f"""🥕 <b>SABZAVOT SOTILADI</b>
@@ -78,6 +81,7 @@ def format_parranda_message(product):
     weight = f"\n⚖️ Og'irligi: {product.weight}" if product.weight else ""
     desc = f"\n\n📝 Qo'shimcha: {product.description}" if product.description else ""
     location_text = _get_location_text(product)
+    qty = f"\n📦 <b>Miqdori:</b> {product.quantity} kg" if getattr(product, 'quantity', None) else ""
     date_str = product.created_at.strftime("%d.%m.%Y")
 
     return f"""🐔 <b>PARRANDA SOTILADI</b>
@@ -95,6 +99,7 @@ def format_tuxum_message(product):
     qty = f"\n📦 Soni: {product.quantity} ta" if product.quantity else ""
     desc = f"\n\n📝 Qo'shimcha: {product.description}" if product.description else ""
     location_text = _get_location_text(product)
+    qty = f"\n📦 <b>Miqdori:</b> {product.quantity} kg" if getattr(product, 'quantity', None) else ""
     date_str = product.created_at.strftime("%d.%m.%Y")
 
     return f"""🥚 <b>TUXUM SOTILADI</b>
@@ -156,8 +161,17 @@ async def send_product_to_channel(bot: Bot, product, images) -> int | None:
                 media_group.append(media)
 
             if media_group:
-                messages = await bot.send_media_group(chat_id=channel_id, media=media_group)
-                return messages[0].message_id if messages else None
+                if len(media_group) == 1:
+                    msg = await bot.send_photo(
+                        chat_id=channel_id, 
+                        photo=media_group[0].media, 
+                        caption=caption, 
+                        parse_mode='HTML'
+                    )
+                    return msg.message_id
+                else:
+                    messages = await bot.send_media_group(chat_id=channel_id, media=media_group)
+                    return messages[0].message_id if messages else None
         else:
             msg = await bot.send_message(chat_id=channel_id, text=caption, parse_mode='HTML')
             return msg.message_id
