@@ -9,9 +9,7 @@ client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 client.connect(host, port, username, password)
 
-stdin, stdout, stderr = client.exec_command("sudo journalctl -u savdo247 -n 50 --no-pager", get_pty=True)
-stdin.write(password + "\n")
-stdin.flush()
+stdin, stdout, stderr = client.exec_command("cd /var/www/savdo247 && /var/www/savdo247/venv/bin/python manage.py showmigrations")
 print("OUT:", stdout.read().decode())
 
 client.close()

@@ -14,6 +14,7 @@ from django.db.models import Count, Q
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 import json
+from django.core.paginator import Paginator
 
 from marketplace.models import Product, ProductImage, BotSettings
 

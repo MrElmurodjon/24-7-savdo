@@ -685,21 +685,14 @@ async def my_products(update: Update, context: ContextTypes.DEFAULT_TYPE):
         loc = p.location_text or (f"📍 Koordinata bor" if p.location_lat else "—")
         desc = f"\n📝 {p.description}" if p.description else ""
 
-        sold_tag = "? <b>SOTILDI</b> ?
-
-" if getattr(p, 'is_sold', False) else ""
+        sold_tag = "❌ <b>SOTILDI</b> ❌\n\n" if getattr(p, 'is_sold', False) else ""
         text = (
-            f"{sold_tag}{icon} <b>{p.name}</b>
-"
-            f"?? Narx: {price_fmt} so'm
-"
-            f"?? Tel: {p.phone}
-"
-            f"?? Manzil: {loc}"
-            f"{desc}
-"
-            f"?? {p.created_at.strftime('%d.%m.%Y')}"
-        )}"
+            f"{sold_tag}{icon} <b>{p.name}</b>\n"
+            f"💰 Narx: {price_fmt} so'm\n"
+            f"📞 Tel: {p.phone}\n"
+            f"📍 Manzil: {loc}"
+            f"{desc}\n"
+            f"📅 {p.created_at.strftime('%d.%m.%Y')}"
         )
         await update.message.reply_text(
             text,
