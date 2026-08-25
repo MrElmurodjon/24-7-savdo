@@ -37,7 +37,12 @@ user_data_store = {}
 @sync_to_async
 def get_bot_welcome():
     s = BotSettings.get_settings()
-    return s.welcome_message or "🌿 Quva Nihol Marketplacega Xush Kelibsiz!"
+    msg = s.welcome_message or "🌿 24/7 Savdo Marketplacega Xush Kelibsiz!"
+    if "Quva Nihol" in msg:
+        s.welcome_message = msg.replace("Quva Nihol", "24/7 Savdo")
+        s.save()
+        msg = s.welcome_message
+    return msg
 
 @sync_to_async
 def get_channel_url():
