@@ -1,7 +1,7 @@
 {% extends 'dashboard/base.html' %}
 
 {% block title %}Sotilganlar - 24/7 Savdo{% endblock %}
-{% block page_title %}? Sotilganlar{% endblock %}
+{% block page_title %}✅ Sotilganlar{% endblock %}
 
 {% block content %}
 
@@ -25,7 +25,7 @@
 <div class="card fade-in">
   <!-- FILTER BAR -->
   <form method="GET" class="filters-bar">
-    <input type="text" name="q" class="filter-input" placeholder="?? Qidirish..." value="{{ q }}" style="width:200px;">
+    <input type="text" name="q" class="filter-input" placeholder="🔍 Qidirish..." value="{{ q }}" style="width:200px;">
     <select name="category" class="filter-select">
       <option value="">Barcha turlar</option>
       {% for cat_val, cat_display in categories %}
@@ -89,7 +89,7 @@
           <td>{{ p.phone }}</td>
           <td>
             {% if p.location_lat %}
-            <a href="https://www.google.com/maps?q={{ p.location_lat }},{{ p.location_lon }}" target="_blank" class="btn btn-sm btn-info" style="padding:4px 10px;font-size:11px;">?? Ko'rish</a>
+            <a href="https://www.google.com/maps?q={{ p.location_lat }},{{ p.location_lon }}" target="_blank" class="btn btn-sm btn-info" style="padding:4px 10px;font-size:11px;">📍 Ko'rish</a>
             {% else %}-{% endif %}
           </td>
           <td style="color:var(--text-muted); font-size:12px;">{{ p.sold_at|date:"d.m.Y H:i" }}</td>
@@ -98,12 +98,12 @@
               <form action="{% url 'dashboard:product_mark_sold' p.pk %}?next={% url 'dashboard:sold_products' %}" method="POST" style="margin:0;">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-icon" style="background:rgba(255,193,7,0.1); color:#ffc107;" title="Sotuvdan bekor qilish" onclick="return confirm('Bu mahsulotni sotilganlar qatoridan chiqarib, yana faol e\'lonlarga qaytarasizmi?');">
-                  ??
+                  ↩️
                 </button>
               </form>
               <form action="{% url 'dashboard:product_delete' p.pk %}" method="POST" style="margin:0;" onsubmit="return confirm('Sotilgan mahsulotni bazadan butunlay o\'chirishni tasdiqlaysizmi?');">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-icon btn-danger" title="O'chirish">???</button>
+                <button type="submit" class="btn btn-icon btn-danger" title="O'chirish">↩️?</button>
               </form>
             </div>
           </td>
