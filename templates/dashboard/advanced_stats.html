@@ -70,72 +70,62 @@
                                                     <i class="fas fa-chevron-right tree-icon"></i>
                                                     <i class="fas fa-folder-open"></i> 
                                                     <span style="flex:1">{{ category }}</span>
+                                                <span class="prod-count badge badge-active" style="margin-left: 10px;">{{ products|length }} ta e'lon</span>
                                                 </div>
-                                                <ul class="tree-children" style="display: none;">
-                                                    {% for prod_name, prod_list in products.items %}
-                                                        <li class="tree-node">
-                                                            <div class="tree-item tree-product" onclick="toggleTree(this)">
-                                                                <i class="fas fa-chevron-right tree-icon"></i>
-                                                                <span class="prod-name" style="flex:1">{{ prod_name }}</span>
-                                                                <span class="prod-count badge badge-active">{{ prod_list|length }} ta e'lon</span>
-                                                            </div>
-                                                            <div class="tree-children" style="display: none;">
-                                                                <div class="table-wrapper" style="margin: 10px 0;">
-                                                                    <table>
-                                                                        <thead>
-                                                                            <tr>
-                                                                                <th>Rasm</th>
-                                                                                <th>Nomi</th>
-                                                                                <th>Narxi</th>
-                                                                                <th>Telefon</th>
-                                                                                <th>Manzil</th>
-                                                                                <th>Sana</th>
-                                                                                <th>Amallar</th>
-                                                                            </tr>
-                                                                        </thead>
-                                                                        <tbody>
-                                                                        {% for p in prod_list %}
-                                                                            <tr>
-                                                                                <td>
-                                                                                    {% with p.images.first as img %}
-                                                                                    {% if img and img.image %}
-                                                                                        <div style="width:48px;height:48px;border-radius:8px;overflow:hidden;border:1px solid var(--border);">
-                                                                                            <img src="{{ img.image.url }}" style="width:100%;height:100%;object-fit:cover;">
-                                                                                        </div>
-                                                                                    {% else %}
-                                                                                        <div style="width:48px;height:48px;border-radius:8px;background:rgba(82,183,136,0.1);display:flex;align-items:center;justify-content:center;font-size:22px;">
-                                                                                            <i class="fas fa-image" style="color:#ccc"></i>
-                                                                                        </div>
-                                                                                    {% endif %}
-                                                                                    {% endwith %}
-                                                                                </td>
-                                                                                <td class="product-name-cell"><a href="{% url 'dashboard:product_detail' p.pk %}" style="font-weight:bold;color:var(--primary);">{{ p.name }}</a></td>
-                                                                                <td class="product-price-cell">{{ p.format_price }} so'm</td>
-                                                                                <td>{{ p.phone }}</td>
-                                                                                <td>
-                                                                                    {% if p.location_lat and p.location_lon %}
-                                                                                        <a href="https://www.google.com/maps?q={{ p.location_lat }},{{ p.location_lon }}" target="_blank" class="btn btn-sm btn-info" style="padding:4px 10px;font-size:11px;">📍 Ko'rish</a>
-                                                                                    {% else %}—{% endif %}
-                                                                                </td>
-                                                                                <td style="color:var(--text-muted); font-size:12px;">{{ p.created_at|date:"d.m.Y H:i" }}</td>
-                                                                                <td>
-                                                                                    <div style="display:flex;gap:6px;">
-                                                                                        <a href="{% url 'dashboard:product_edit' p.pk %}" class="btn btn-icon btn-warning" title="Tahrirlash" style="font-size:12px;padding:4px 8px;">✏️</a>
-                                                                                        <form action="{% url 'dashboard:product_delete' p.pk %}" method="POST" style="margin:0;" onsubmit="return confirm('Ochirishni tasdiqlaysizmi?');">
-                                                                                            {% csrf_token %}
-                                                                                            <button type="submit" class="btn btn-icon btn-danger" title="O'chirish" style="font-size:12px;padding:4px 8px;">🗑️</button>
-                                                                                        </form>
-                                                                                    </div>
-                                                                                </td>
-                                                                            </tr>
-                                                                        {% endfor %}
-                                                                        </tbody>
-                                                                    </table>
-                                                                </div>
-                                                            </div>
-                                                        </li>
-                                                    {% endfor %}
-                                                </ul>
+                                                <div class="tree-children" style="display: none;">
+                                                    <div class="table-wrapper" style="margin: 10px 0;">
+                                                        <table>
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Rasm</th>
+                                                                    <th>Nomi</th>
+                                                                    <th>Narxi</th>
+                                                                    <th>Telefon</th>
+                                                                    <th>Manzil</th>
+                                                                    <th>Sana</th>
+                                                                    <th>Amallar</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                            {% for p in products %}
+                                                                <tr>
+                                                                    <td>
+                                                                        {% with p.images.first as img %}
+                                                                        {% if img and img.image %}
+                                                                            <div style="width:48px;height:48px;border-radius:8px;overflow:hidden;border:1px solid var(--border);">
+                                                                                <img src="{{ img.image.url }}" style="width:100%;height:100%;object-fit:cover;">
+                                                                            </div>
+                                                                        {% else %}
+                                                                            <div style="width:48px;height:48px;border-radius:8px;background:rgba(82,183,136,0.1);display:flex;align-items:center;justify-content:center;font-size:22px;">
+                                                                                <i class="fas fa-image" style="color:#ccc"></i>
+                                                                            </div>
+                                                                        {% endif %}
+                                                                        {% endwith %}
+                                                                    </td>
+                                                                    <td class="product-name-cell"><a href="{% url 'dashboard:product_detail' p.pk %}" style="font-weight:bold;color:var(--primary);">{{ p.name }}</a></td>
+                                                                    <td class="product-price-cell">{{ p.format_price }} so'm</td>
+                                                                    <td>{{ p.phone }}</td>
+                                                                    <td>
+                                                                        {% if p.location_lat and p.location_lon %}
+                                                                            <a href="https://www.google.com/maps?q={{ p.location_lat }},{{ p.location_lon }}" target="_blank" class="btn btn-sm btn-info" style="padding:4px 10px;font-size:11px;">📍 Ko'rish</a>
+                                                                        {% else %}—{% endif %}
+                                                                    </td>
+                                                                    <td style="color:var(--text-muted); font-size:12px;">{{ p.created_at|date:"d.m.Y H:i" }}</td>
+                                                                    <td>
+                                                                        <div style="display:flex;gap:6px;">
+                                                                            <a href="{% url 'dashboard:product_edit' p.pk %}" class="btn btn-icon btn-warning" title="Tahrirlash" style="font-size:12px;padding:4px 8px;">✏️</a>
+                                                                            <form action="{% url 'dashboard:product_delete' p.pk %}" method="POST" style="margin:0;" onsubmit="return confirm('Ochirishni tasdiqlaysizmi?');">
+                                                                                {% csrf_token %}
+                                                                                <button type="submit" class="btn btn-icon btn-danger" title="O'chirish" style="font-size:12px;padding:4px 8px;">🗑️</button>
+                                                                            </form>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
                                             </li>
                                         {% endfor %}
                                     </ul>

@@ -406,20 +406,14 @@ def advanced_stats_view(request):
         reg = p.region or "Noma'lum hudud"
         dist = p.district or "Noma'lum tuman"
         cat = p.get_category_display()
-        # Biz standartlashtirilgan nomni ishlatamiz, agar yo'q bo'lsa aslisini
-        prod_name = p.standardized_name or p.name or "Noma'lum"
-        prod_name = prod_name.capitalize()
-        
         if reg not in tree:
             tree[reg] = {}
         if dist not in tree[reg]:
             tree[reg][dist] = {}
         if cat not in tree[reg][dist]:
-            tree[reg][dist][cat] = {}
-        if prod_name not in tree[reg][dist][cat]:
-            tree[reg][dist][cat][prod_name] = []
+            tree[reg][dist][cat] = []
             
-        tree[reg][dist][cat][prod_name].append(p)
+        tree[reg][dist][cat].append(p)
         total_count += 1
         
     context = {
