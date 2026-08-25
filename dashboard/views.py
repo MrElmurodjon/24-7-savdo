@@ -290,6 +290,86 @@ def product_toggle(request, pk):
     product.save(update_fields=['is_active'])
     return JsonResponse({'status': 'ok', 'is_active': product.is_active})
 
+@login_required_custom
+@require_POST
+def product_mark_sold(request, pk):
+    """Mahsulotni sotildi deb belgilash"""
+    from django.utils import timezone
+    product = get_object_or_404(Product, pk=pk)
+    
+    # Toggle (agar qayta bosilsa)
+    if product.is_sold:
+        product.is_sold = False
+        product.is_active = True
+        product.sold_at = None
+    else:
+        product.is_sold = True
+        product.is_active = False # Sotilgan bo'lsa faol emas bo'ladi
+        product.sold_at = timezone.now()
+        
+    product.save()
+
+    # Telegram kanalni yangilash (SOTILDI yozuvi qo'shish yoki olib tashlash)
+    if product.telegram_message_id:
+        try:
+            bot_settings = BotSettings.get_settings()
+            if bot_settings.bot_token:
+                from telegram import Bot
+                from bot.channel import edit_product_in_channel
+                bot = Bot(token=bot_settings.bot_token)
+                images = product.images.all()
+                asyncio.run(edit_product_in_channel(bot, product, images))
+        except Exception as e:
+            logger.error(f"Telegram yangilashda xato: {e}")
+
+    # Sahifaga qarab qayerga qaytishni hal qilamiz
+    next_url = request.GET.get('next', 'dashboard:products')
+    return redirect(next_url)
+
+@login_required_custom
+def sold_products_view(request):
+    """Sotilgan mahsulotlar sahifasi"""
+    products_list = Product.objects.filter(is_sold=True).order_by('-sold_at')
+    
+    # Qidiruv va Filtr
+    q = request.GET.get('q', '').strip()
+    category = request.GET.get('category', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    
+    if q:
+        products_list = products_list.filter(
+            Q(name__icontains=q) | 
+            Q(description__icontains=q) |
+            Q(phone__icontains=q)
+        )
+    if category:
+        products_list = products_list.filter(category=category)
+    if date_from:
+        products_list = products_list.filter(sold_at__gte=date_from)
+    if date_to:
+        products_list = products_list.filter(sold_at__lte=f"{date_to} 23:59:59")
+        
+    # Xulosa hisobot (nechta ko'chat, nechta meva sotilgani)
+    summary_qs = products_list.values('category').annotate(count=Count('id'))
+    summary = {item['category']: item['count'] for item in summary_qs}
+    
+    paginator = Paginator(products_list, 20)
+    page_number = request.GET.get('page')
+    products = paginator.get_page(page_number)
+    
+    context = {
+        'products': products,
+        'summary': summary,
+        'active_menu': 'sold_products',
+        'q': q,
+        'category': category,
+        'date_from': date_from,
+        'date_to': date_to,
+        'categories': Product.CATEGORY_CHOICES,
+    }
+    return render(request, 'dashboard/sold_products.html', context)
+
 
 # ===================== SOZLAMALAR =====================
 

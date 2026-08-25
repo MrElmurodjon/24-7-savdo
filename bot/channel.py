@@ -109,15 +109,19 @@ def format_tuxum_message(product):
 
 def get_caption_for_product(product):
     if product.category == 'kochat':
-        return format_kochat_message(product)
+        caption = format_kochat_message(product)
     elif product.category == 'sabzavot':
-        return format_sabzavot_message(product)
+        caption = format_sabzavot_message(product)
     elif product.category == 'parranda':
-        return format_parranda_message(product)
+        caption = format_parranda_message(product)
     elif product.category == 'tuxum':
-        return format_tuxum_message(product)
+        caption = format_tuxum_message(product)
     else:
-        return format_meva_message(product)
+        caption = format_meva_message(product)
+        
+    if product.is_sold:
+        return f"❌ <b>SOTILDI</b> ❌\n\n{caption}"
+    return caption
 
 async def send_product_to_channel(bot: Bot, product, images) -> int | None:
     channel_id = await _get_channel_id()

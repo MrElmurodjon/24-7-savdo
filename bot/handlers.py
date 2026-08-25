@@ -685,18 +685,26 @@ async def my_products(update: Update, context: ContextTypes.DEFAULT_TYPE):
         loc = p.location_text or (f"📍 Koordinata bor" if p.location_lat else "—")
         desc = f"\n📝 {p.description}" if p.description else ""
 
+        sold_tag = "? <b>SOTILDI</b> ?
+
+" if getattr(p, 'is_sold', False) else ""
         text = (
-            f"{icon} <b>{p.name}</b>\n"
-            f"💰 Narx: {price_fmt} so'm\n"
-            f"📞 Tel: {p.phone}\n"
-            f"📍 Manzil: {loc}"
-            f"{desc}\n"
-            f"🗓 {p.created_at.strftime('%d.%m.%Y')}"
+            f"{sold_tag}{icon} <b>{p.name}</b>
+"
+            f"?? Narx: {price_fmt} so'm
+"
+            f"?? Tel: {p.phone}
+"
+            f"?? Manzil: {loc}"
+            f"{desc}
+"
+            f"?? {p.created_at.strftime('%d.%m.%Y')}"
+        )}"
         )
         await update.message.reply_text(
             text,
             parse_mode='HTML',
-            reply_markup=product_actions_keyboard(p.id)
+            reply_markup=product_actions_keyboard(p.id, p.is_sold)
         )
 
 
@@ -1159,10 +1167,13 @@ def get_product_by_id(product_id):
 @sync_to_async
 def mark_product_sold(product_id):
     from marketplace.models import Product
+    from django.utils import timezone
     try:
         p = Product.objects.get(id=product_id)
         p.is_active = False
-        p.save(update_fields=['is_active'])
+        p.is_sold = True
+        p.sold_at = timezone.now()
+        p.save(update_fields=['is_active', 'is_sold', 'sold_at'])
         return p
     except Product.DoesNotExist:
         return None

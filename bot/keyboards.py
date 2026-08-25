@@ -80,12 +80,17 @@ def done_photos_keyboard():
     return ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=False)
 
 
-def product_actions_keyboard(product_id):
+def product_actions_keyboard(product_id, is_sold=False):
     """Mahsulot uchun inline tugmalar"""
+    if is_sold:
+        sold_btn = InlineKeyboardButton("↩️ Sotuvga qaytarish", callback_data=f"sold_{product_id}")
+    else:
+        sold_btn = InlineKeyboardButton("💵 Sotildi", callback_data=f"sold_{product_id}")
+        
     keyboard = [
         [
             InlineKeyboardButton("✏️ Tahrirlash", callback_data=f"edit_{product_id}"),
-            InlineKeyboardButton("💵 Sotildi", callback_data=f"sold_{product_id}"),
+            sold_btn,
         ],
         [
             InlineKeyboardButton("🗑️ O'chirish", callback_data=f"delete_{product_id}"),

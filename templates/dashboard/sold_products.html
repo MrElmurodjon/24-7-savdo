@@ -1,0 +1,141 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Sotilganlar — 24/7 Savdo{% endblock %}
+{% block page_title %}? Sotilganlar{% endblock %}
+
+{% block content %}
+
+<!-- Xulosa kartalari -->
+<div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+  {% for cat_val, cat_display in categories %}
+  <div style="background: white; border-radius: var(--radius); padding: 15px 20px; flex: 1; min-width: 150px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 5px;">{{ cat_display }}</div>
+    <div style="font-size: 24px; font-weight: 700; color: var(--primary);">
+        {% for k, v in summary.items %}
+            {% if k == cat_val %}{{ v }}{% endif %}
+        {% empty %}
+            0
+        {% endfor %}
+        {% if cat_val not in summary.keys %}0{% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="card fade-in">
+  <!-- FILTER BAR -->
+  <form method="GET" class="filters-bar">
+    <input type="text" name="q" class="filter-input" placeholder="?? Qidirish..." value="{{ q }}" style="width:200px;">
+    <select name="category" class="filter-select">
+      <option value="">Barcha turlar</option>
+      {% for cat_val, cat_display in categories %}
+      <option value="{{ cat_val }}" {% if category == cat_val %}selected{% endif %}>{{ cat_display }}</option>
+      {% endfor %}
+    </select>
+    <div style="display:flex; align-items:center; gap: 5px;">
+        <span style="font-size:12px;color:var(--text-muted);">Dan:</span>
+        <input type="date" name="date_from" class="filter-input" value="{{ date_from }}">
+    </div>
+    <div style="display:flex; align-items:center; gap: 5px;">
+        <span style="font-size:12px;color:var(--text-muted);">Gacha:</span>
+        <input type="date" name="date_to" class="filter-input" value="{{ date_to }}">
+    </div>
+    
+    <button type="submit" class="btn btn-primary btn-sm">Filtrlash</button>
+    <a href="{% url 'dashboard:sold_products' %}" class="btn btn-sm" style="background:rgba(82,183,136,0.1); color:var(--text-secondary); border:1px solid var(--border);">Tozalash</a>
+  </form>
+
+  <!-- TABLE -->
+  {% if products %}
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Rasm</th>
+          <th>Nomi</th>
+          <th>Tur</th>
+          <th>Narxi</th>
+          <th>Telefon</th>
+          <th>Manzil</th>
+          <th>Sotilgan Sana</th>
+          <th>Amallar</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in products %}
+        <tr id="row-{{ p.pk }}">
+          <td style="color:var(--text-muted); font-size:13px;">{{ p.pk }}</td>
+          <td>
+            {% with p.images.first as img %}
+            {% if img and img.image %}
+            <div style="width:48px;height:48px;border-radius:8px;overflow:hidden;border:1px solid var(--border);">
+              <img src="{{ img.image.url }}" style="width:100%;height:100%;object-fit:cover;" alt="{{ p.name }}">
+            </div>
+            {% else %}
+            <div style="width:48px;height:48px;border-radius:8px;background:rgba(82,183,136,0.1);display:flex;align-items:center;justify-content:center;font-size:22px;">
+              <i class="fas fa-image" style="color:#ccc"></i>
+            </div>
+            {% endif %}
+            {% endwith %}
+          </td>
+          <td class="product-name-cell">
+            <a href="{% url 'dashboard:product_detail' p.pk %}">{{ p.name }}</a>
+          </td>
+          <td>
+            <span class="badge" style="background: rgba(82,183,136,0.1); color: var(--primary);">{{ p.get_category_display }}</span>
+          </td>
+          <td class="product-price-cell">{{ p.format_price }} so'm</td>
+          <td>{{ p.phone }}</td>
+          <td>
+            {% if p.location_lat %}
+            <a href="https://www.google.com/maps?q={{ p.location_lat }},{{ p.location_lon }}" target="_blank" class="btn btn-sm btn-info" style="padding:4px 10px;font-size:11px;">?? Ko'rish</a>
+            {% else %}—{% endif %}
+          </td>
+          <td style="color:var(--text-muted); font-size:12px;">{{ p.sold_at|date:"d.m.Y H:i" }}</td>
+          <td>
+            <div style="display:flex; gap:6px;">
+              <form action="{% url 'dashboard:product_mark_sold' p.pk %}?next={% url 'dashboard:sold_products' %}" method="POST" style="margin:0;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-icon" style="background:rgba(255,193,7,0.1); color:#ffc107;" title="Sotuvdan bekor qilish" onclick="return confirm('Bu mahsulotni sotilganlar qatoridan chiqarib, yana faol e\'lonlarga qaytarasizmi?');">
+                  ??
+                </button>
+              </form>
+              <form action="{% url 'dashboard:product_delete' p.pk %}" method="POST" style="margin:0;" onsubmit="return confirm('Sotilgan mahsulotni bazadan butunlay o\'chirishni tasdiqlaysizmi?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-icon btn-danger" title="O'chirish">???</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- PAGINATION -->
+  {% if products.has_other_pages %}
+  <div class="pagination">
+    {% if products.has_previous %}
+      <a href="?page={{ products.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if category %}&category={{ category }}{% endif %}" class="page-link">&laquo; Oldingi</a>
+    {% endif %}
+    
+    <span class="page-current">
+      Sahifa {{ products.number }} / {{ products.paginator.num_pages }}
+    </span>
+
+    {% if products.has_next %}
+      <a href="?page={{ products.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if category %}&category={{ category }}{% endif %}" class="page-link">Keyingi &raquo;</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">?</div>
+    <h3>Sotilgan mahsulotlar topilmadi</h3>
+    <p>Hozircha sotilganlar yo'q yoki qidiruvga mos mahsulot topilmadi.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

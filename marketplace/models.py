@@ -65,6 +65,8 @@ class Product(models.Model):
     telegram_full_name = models.CharField(max_length=200, blank=True, verbose_name="Telegram ism")
 
     is_active = models.BooleanField(default=True, verbose_name="Faolmi?")
+    is_sold = models.BooleanField(default=False, verbose_name="Sotilganmi?")
+    sold_at = models.DateTimeField(null=True, blank=True, verbose_name="Sotilgan sana")
     created_at = models.DateTimeField(default=timezone.now, verbose_name="Qo'shilgan sana")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="O'zgartirilgan sana")
 
