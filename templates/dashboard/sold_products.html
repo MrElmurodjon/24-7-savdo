@@ -97,13 +97,11 @@
             <div style="display:flex; gap:6px;">
               <form action="{% url 'dashboard:product_mark_sold' p.pk %}?next={% url 'dashboard:sold_products' %}" method="POST" style="margin:0;">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-icon" style="background:rgba(255,193,7,0.1); color:#ffc107;" title="Sotuvdan bekor qilish" onclick="return confirm('Bu mahsulotni sotilganlar qatoridan chiqarib, yana faol e\'lonlarga qaytarasizmi?');">
-                  ↩️
-                </button>
+                <button type="submit" class="btn btn-icon" style="background:rgba(255,193,7,0.1); color:#ffc107;" title="Sotuvdan bekor qilish" onclick="return confirm('Bu mahsulotni sotilganlar qatoridan chiqarib, yana faol e\'lonlarga qaytarasizmi?');">↩️</button>
               </form>
               <form action="{% url 'dashboard:product_delete' p.pk %}" method="POST" style="margin:0;" onsubmit="return confirm('Sotilgan mahsulotni bazadan butunlay o\'chirishni tasdiqlaysizmi?');">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-icon btn-danger" title="O'chirish">↩️?</button>
+                <button type="submit" class="btn btn-icon btn-danger" title="O'chirish">🗑️</button>
               </form>
             </div>
           </td>
