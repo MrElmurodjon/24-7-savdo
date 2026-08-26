@@ -352,8 +352,12 @@ def sold_products_view(request):
         products_list = products_list.filter(sold_at__lte=f"{date_to} 23:59:59")
         
     # Xulosa hisobot (nechta ko'chat, nechta meva sotilgani)
-    summary_qs = products_list.values('category').annotate(count=Sum('quantity'))
-    summary = {item['category']: item['count'] or 0 for item in summary_qs}
+    summary_qs = products_list.values('category').annotate(count=Count('id'))
+    # Barcha kategoriyalar uchun default 0 qilib sozlaymiz
+    all_categories = ['kochat', 'meva', 'sabzavot', 'parranda', 'tuxum']
+    summary = {cat: 0 for cat in all_categories}
+    for item in summary_qs:
+        summary[item['category']] = item['count'] or 0
     
     paginator = Paginator(products_list, 20)
     page_number = request.GET.get('page')
