@@ -26,31 +26,57 @@ def webapp_product_edit(request, pk):
         if loc:
             product.location_text = loc
             
+        lat = request.POST.get('location_lat')
+        lon = request.POST.get('location_lon')
+        if lat and lon:
+            try:
+                product.location_lat = float(lat)
+                product.location_lon = float(lon)
+            except ValueError:
+                pass
+            
         product.save()
         
+        from bot.channel import edit_product_in_channel, delete_product_from_channel, send_product_to_channel
+        from marketplace.models import BotSettings, ProductImage
+        from telegram import Bot
+        import asyncio
+        
+        bot_settings = BotSettings.get_settings()
         images_updated = False
+        old_image_count = product.images.count()
+        
         if 'image1' in request.FILES or 'image2' in request.FILES:
-            from marketplace.models import ProductImage
+            # Rasm o'zgargan bo'lsa, avval eskisini kanaldan o'chiramiz
+            if bot_settings.bot_token and product.telegram_message_id:
+                bot = Bot(token=bot_settings.bot_token)
+                try:
+                    # Eskisi album bo'lsa hammalarini o'chirishga harakat qilamiz
+                    for i in range(max(1, old_image_count)):
+                        try:
+                            # We can't use delete_product_from_channel cleanly for albums without modifying it, 
+                            # so we do it inline here or just call it multiple times.
+                            # Better yet, let's just delete the main message. In most cases they only uploaded 1 image recently.
+                            pass
+                        except Exception:
+                            pass
+                    # For simplicity, let's just use the existing function and we will update delete_product_from_channel separately.
+                    asyncio.run(delete_product_from_channel(bot, product, old_image_count))
+                except Exception as e:
+                    print("Error deleting old: ", e)
+                    
             product.images.all().delete()
             if 'image1' in request.FILES:
                 ProductImage.objects.create(product=product, image=request.FILES['image1'])
             if 'image2' in request.FILES:
                 ProductImage.objects.create(product=product, image=request.FILES['image2'])
             images_updated = True
-        
-        from bot.channel import edit_product_in_channel, delete_product_from_channel, send_product_to_channel
-        from marketplace.models import BotSettings
-        from telegram import Bot
-        import asyncio
-        
-        bot_settings = BotSettings.get_settings()
+
         if bot_settings.bot_token and product.telegram_message_id:
             bot = Bot(token=bot_settings.bot_token)
-            images = product.images.all()
+            images = list(product.images.all()) # MUST EVALUATE QUERYSET BEFORE PASSING TO ASYNC!
             try:
                 if images_updated:
-                    # Rasm o'zgargan bo'lsa postni o'chirib qayta yuboramiz
-                    asyncio.run(delete_product_from_channel(bot, product))
                     new_msg_id = asyncio.run(send_product_to_channel(bot, product, images))
                     if new_msg_id:
                         product.telegram_message_id = new_msg_id
@@ -58,8 +84,8 @@ def webapp_product_edit(request, pk):
                 else:
                     # Faqat text o'zgargan
                     asyncio.run(edit_product_in_channel(bot, product, images))
-            except Exception:
-                pass
+            except Exception as e:
+                print("Error sending/editing: ", e)
                 
         return render(request, 'dashboard/webapp_success.html')
 

@@ -12,6 +12,14 @@
         input, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; background: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #000); }
         button { width: 100%; padding: 12px; background: var(--tg-theme-button-color, #3390ec); color: var(--tg-theme-button-text-color, #fff); border: none; border-radius: 8px; font-size: 16px; font-weight: bold; margin-top: 10px; cursor: pointer; }
     </style>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        #map { height: 200px; width: 100%; border-radius: 8px; margin-top: 10px; margin-bottom: 10px; }
+        .current-images { display: flex; gap: 10px; margin-bottom: 15px; }
+        .current-images img { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; }
+    </style>
 </head>
 <body>
     <form method="POST" enctype="multipart/form-data">
@@ -32,16 +40,50 @@
             <textarea name="description" rows="3">{{ product.description }}</textarea>
         </div>
 
+        {% if product.category != 'meva' and product.category != 'sabzavot' %}
         <div class="form-group">
-            <label>Miqdori (kg/dona)</label>
+            <label>Soni (nechta dona?)</label>
             <input type="number" name="quantity" value="{{ product.quantity|default_if_none:'' }}">
         </div>
-        <div class="form-group">
-            <label>Manzil (matn ko'rinishida)</label>
-            <input type="text" name="location_text" value="{{ product.location_text|default_if_none:'' }}">
+        {% endif %}
+                <div class="form-group">
+            <label>Manzil (Xaritadan tanlang yoki yozing)</label>
+            <div id="map"></div>
+            <input type="hidden" name="location_lat" id="location_lat" value="{{ product.location_lat|default_if_none:'' }}">
+            <input type="hidden" name="location_lon" id="location_lon" value="{{ product.location_lon|default_if_none:'' }}">
+            <input type="text" name="location_text" id="location_text" value="{{ product.location_text|default_if_none:'' }}" placeholder="Yoki manzilni matn ko'rinishida yozing">
         </div>
+        
+        <script>
+            var lat = {{ product.location_lat|default_if_none:"40.3833" }};
+            var lon = {{ product.location_lon|default_if_none:"71.7833" }}; // Fergana as default
+            var map = L.map('map').setView([lat, lon], 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            var marker = L.marker([lat, lon], {draggable: true}).addTo(map);
+            
+            map.on('click', function(e) {
+                marker.setLatLng(e.latlng);
+                document.getElementById('location_lat').value = e.latlng.lat;
+                document.getElementById('location_lon').value = e.latlng.lng;
+            });
+            
+            marker.on('dragend', function(e) {
+                var pos = marker.getLatLng();
+                document.getElementById('location_lat').value = pos.lat;
+                document.getElementById('location_lon').value = pos.lng;
+            });
+        </script>
         <div class="form-group">
-            <label>Yangi Rasm yuklash (ixtiyoriy)</label>
+            <label>Joriy rasmlar</label>
+            <div class="current-images">
+                {% for img in product.images.all %}
+                    {% if img.image %}
+                        <img src="{{ img.image.url }}" alt="rasm">
+                    {% endif %}
+                {% endfor %}
+            </div>
+            
+            <label>Yangi Rasm yuklash (Agar rasmni o'zgartirmoqchi bo'lsangiz yangi rasmlarni tanlang. Barcha eski rasmlar o'chib ketadi)</label>
             
             <input type="file" name="image1" accept="image/*" style="margin-bottom: 10px;">
             <input type="file" name="image2" accept="image/*">
