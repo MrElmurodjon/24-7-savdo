@@ -689,7 +689,7 @@ async def my_products(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             loc = p.location_text or "-"
             
-                if p.category in ['meva', 'sabzavot']:
+        if p.category in ['meva', 'sabzavot']:
             qty = f"\n📦 Miqdori: {p.quantity} kg" if getattr(p, 'quantity', None) else ""
         else:
             qty = f"\n📦 Soni: {p.quantity} dona" if getattr(p, 'quantity', None) else ""
