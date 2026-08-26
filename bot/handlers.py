@@ -707,41 +707,40 @@ async def my_products(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         images = await sync_to_async(list)(p.images.all())
         if images:
-            from telegram import InputMediaPhoto
-            media_group = []
-            import os
-            for i, img in enumerate(images):
-                if getattr(img, 'telegram_file_id', None):
-                    media_group.append(
-                        InputMediaPhoto(
-                            media=img.telegram_file_id,
-                            caption=text if i == 0 else None,
-                            parse_mode='HTML'
-                        )
-                    )
-                elif hasattr(img.image, 'path') and os.path.exists(img.image.path):
-                    with open(img.image.path, 'rb') as photo_file:
-                        media_group.append(
-                            InputMediaPhoto(
-                                media=photo_file.read(),
-                                caption=text if i == 0 else None,
-                                parse_mode='HTML'
-                            )
-                        )
-            if len(media_group) == 1:
-                # Agar 1 ta rasm bo'lsa
+            import os, io
+            # Barcha rasmlarni disk/telegram_file_id dan yuklab olamiz
+            image_bytes_list = []
+            for img in images:
+                if hasattr(img.image, 'path') and os.path.exists(img.image.path):
+                    with open(img.image.path, 'rb') as f_img:
+                        image_bytes_list.append(f_img.read())
+
+            if len(image_bytes_list) >= 2:
+                # 2 rasmni yonma-yon kollaj qilib birlashtirish
+                from PIL import Image
+                imgs = [Image.open(io.BytesIO(b)).convert('RGB') for b in image_bytes_list[:2]]
+                h = 600
+                resized = [img.resize((int(img.width * h / img.height), h)) for img in imgs]
+                total_w = sum(r.width for r in resized)
+                collage = Image.new('RGB', (total_w, h), (255, 255, 255))
+                x = 0
+                for r in resized:
+                    collage.paste(r, (x, 0))
+                    x += r.width
+                buf = io.BytesIO()
+                collage.save(buf, format='JPEG', quality=85)
+                buf.seek(0)
+                photo_bytes = buf.read()
                 await update.message.reply_photo(
-                    photo=media_group[0].media,
+                    photo=photo_bytes,
                     caption=text,
                     parse_mode='HTML',
                     reply_markup=product_actions_keyboard(p.id, getattr(p, 'is_sold', False))
                 )
-            elif len(media_group) > 1:
-                # Agar 2 yoki undan ko'p rasm bo'lsa
-                await update.message.reply_media_group(media=media_group)
-                # Tugmalarni alohida yuboramiz, chunki MediaGroup ga inline tugma ulab bo'lmaydi
-                await update.message.reply_text(
-                    f"{icon} <b>{p.name}</b> uchun amallar:",
+            elif len(image_bytes_list) == 1:
+                await update.message.reply_photo(
+                    photo=image_bytes_list[0],
+                    caption=text,
                     parse_mode='HTML',
                     reply_markup=product_actions_keyboard(p.id, getattr(p, 'is_sold', False))
                 )
