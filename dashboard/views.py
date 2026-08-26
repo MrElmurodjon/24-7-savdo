@@ -352,7 +352,7 @@ def sold_products_view(request):
         products_list = products_list.filter(sold_at__lte=f"{date_to} 23:59:59")
         
     # Xulosa hisobot (nechta ko'chat, nechta meva sotilgani)
-    summary_qs = products_list.values('category').annotate(count=Count('id'))
+    summary_qs = products_list.order_by().values('category').annotate(count=Count('id'))
     # Barcha kategoriyalar uchun default 0 qilib sozlaymiz
     all_categories = ['kochat', 'meva', 'sabzavot', 'parranda', 'tuxum']
     summary = {cat: 0 for cat in all_categories}
