@@ -10,7 +10,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse, FileResponse
 from django.views.decorators.http import require_POST, require_http_methods
 from django.utils import timezone
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Sum
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 import json
@@ -352,8 +352,8 @@ def sold_products_view(request):
         products_list = products_list.filter(sold_at__lte=f"{date_to} 23:59:59")
         
     # Xulosa hisobot (nechta ko'chat, nechta meva sotilgani)
-    summary_qs = products_list.values('category').annotate(count=Count('id'))
-    summary = {item['category']: item['count'] for item in summary_qs}
+    summary_qs = products_list.values('category').annotate(count=Sum('quantity'))
+    summary = {item['category']: item['count'] or 0 for item in summary_qs}
     
     paginator = Paginator(products_list, 20)
     page_number = request.GET.get('page')

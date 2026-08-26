@@ -705,27 +705,53 @@ async def my_products(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"📅 Sana: {p.created_at.strftime('%d.%m.%Y')}"
         )
         
-        first_image = await sync_to_async(lambda p=p: p.images.first())()
-        if first_image and (getattr(first_image, 'telegram_file_id', None) or getattr(first_image, 'image', None)):
-            if getattr(first_image, 'telegram_file_id', None):
+        images = await sync_to_async(list)(p.images.all())
+        if images:
+            from telegram import InputMediaPhoto
+            media_group = []
+            import os
+            for i, img in enumerate(images):
+                if getattr(img, 'telegram_file_id', None):
+                    media_group.append(
+                        InputMediaPhoto(
+                            media=img.telegram_file_id,
+                            caption=text if i == 0 else None,
+                            parse_mode='HTML'
+                        )
+                    )
+                elif hasattr(img.image, 'path') and os.path.exists(img.image.path):
+                    with open(img.image.path, 'rb') as photo_file:
+                        media_group.append(
+                            InputMediaPhoto(
+                                media=photo_file.read(),
+                                caption=text if i == 0 else None,
+                                parse_mode='HTML'
+                            )
+                        )
+            if len(media_group) == 1:
+                # Agar 1 ta rasm bo'lsa
                 await update.message.reply_photo(
-                    photo=first_image.telegram_file_id,
+                    photo=media_group[0].media,
                     caption=text,
                     parse_mode='HTML',
                     reply_markup=product_actions_keyboard(p.id, getattr(p, 'is_sold', False))
                 )
+            elif len(media_group) > 1:
+                # Agar 2 yoki undan ko'p rasm bo'lsa
+                await update.message.reply_media_group(media=media_group)
+                # Tugmalarni alohida yuboramiz, chunki MediaGroup ga inline tugma ulab bo'lmaydi
+                await update.message.reply_text(
+                    f"{icon} <b>{p.name}</b> uchun amallar:",
+                    parse_mode='HTML',
+                    reply_markup=product_actions_keyboard(p.id, getattr(p, 'is_sold', False))
+                )
             else:
-                import os
-                if hasattr(first_image.image, 'path') and os.path.exists(first_image.image.path):
-                    with open(first_image.image.path, 'rb') as photo_file:
-                        await update.message.reply_photo(
-                            photo=photo_file,
-                            caption=text,
-                            parse_mode='HTML',
-                            reply_markup=product_actions_keyboard(p.id, getattr(p, 'is_sold', False))
-                        )
-                else:
-                    await update.message.reply_text(text, parse_mode='HTML', disable_web_page_preview=True, reply_markup=product_actions_keyboard(p.id, getattr(p, 'is_sold', False)))
+                await update.message.reply_text(
+                    text,
+                    parse_mode='HTML',
+                    disable_web_page_preview=True,
+                    reply_markup=product_actions_keyboard(p.id, getattr(p, 'is_sold', False))
+                )
         else:
             await update.message.reply_text(
                 text,
