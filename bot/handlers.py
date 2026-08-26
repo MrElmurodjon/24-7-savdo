@@ -132,7 +132,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "📖 <b>Yordam</b>\n\n"
         "➕ <b>Mahsulot qo'shish</b> — yangi ko'chat yoki meva qo'shish\n"
         "📋 <b>Mening mahsulotlarim</b> — qo'shgan mahsulotlaringiz ro'yxati\n\n"
-        "❓ Savol bo'lsa: @admin ga murojaat qiling",
+        "❓ Savol bo'lsa: @Imelmurodjon ga murojaat qiling",
         parse_mode='HTML',
         reply_markup=main_menu_keyboard()
     )
@@ -728,30 +728,15 @@ async def my_products(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                 parse_mode='HTML'
                             )
                         )
-            if len(media_group) == 1:
-                # Agar 1 ta rasm bo'lsa
-                await update.message.reply_photo(
-                    photo=media_group[0].media,
-                    caption=text,
-                    parse_mode='HTML',
-                    reply_markup=product_actions_keyboard(p.id, getattr(p, 'is_sold', False))
-                )
-            elif len(media_group) > 1:
-                # Agar 2 yoki undan ko'p rasm bo'lsa
-                await update.message.reply_media_group(media=media_group)
-                # Tugmalarni alohida yuboramiz, chunki MediaGroup ga inline tugma ulab bo'lmaydi
-                await update.message.reply_text(
-                    f"{icon} <b>{p.name}</b> uchun amallar:",
-                    parse_mode='HTML',
-                    reply_markup=product_actions_keyboard(p.id, getattr(p, 'is_sold', False))
-                )
-            else:
-                await update.message.reply_text(
-                    text,
-                    parse_mode='HTML',
-                    disable_web_page_preview=True,
-                    reply_markup=product_actions_keyboard(p.id, getattr(p, 'is_sold', False))
-                )
+            # Telegram MediaGroup (albom)larga pastida tugma (inline keyboard) qo'yishga ruxsat bermaydi.
+            # Foydalanuvchi alohida xabar bo'lib kelishini xohlamadi ("1 tada kelsin"),
+            # Shuning uchun 1 ta xabarda kelishi uchun FAqatgina birinchi rasmni yuboramiz.
+            await update.message.reply_photo(
+                photo=media_group[0].media,
+                caption=text,
+                parse_mode='HTML',
+                reply_markup=product_actions_keyboard(p.id, getattr(p, 'is_sold', False))
+            )
         else:
             await update.message.reply_text(
                 text,
