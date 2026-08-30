@@ -175,7 +175,7 @@ async def choose_category(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             "🍎 <b>Meva/Mahsulot qo'shish</b>\n\n"
             "1️⃣ Meva/Mahsulot turini kiriting:\n"
-            "<i>Masalan: Olma, Shaftoli, Uzum, Bodring...</i>",
+            "<i>Masalan: Olma, Shaftoli, Uzum, Gilos...</i>",
             parse_mode='HTML',
             reply_markup=skip_keyboard()
         )
