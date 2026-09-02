@@ -64,6 +64,7 @@ def create_product(data, user_id, username, full_name):
         standardized_name=std_name,
         price=data.get('price', 0),
         quantity=data.get('quantity'),
+        quantity_text=data.get('quantity_text', ''),
         age=data.get('age', ''),
         weight=data.get('weight', ''),
         gender=data.get('gender', ''),
@@ -423,7 +424,21 @@ async def meva_price(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❗ Iltimos, faqat raqam kiriting!")
         return MEVA_PRICE
     await update.message.reply_text(
-        "3️⃣ 📸 <b>Rasmlarni yuboring</b>\n⚠️ Kamida 2 ta rasm kerak!",
+        "3️⃣ 📦 <b>Miqdori</b> (ixtiyoriy):\n<i>Masalan: 500 kg, 1 tonna, 200 litr...</i>",
+        parse_mode='HTML', reply_markup=skip_keyboard()
+    )
+    return MEVA_QUANTITY
+
+
+async def meva_quantity(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    text = update.message.text
+    if "❌" in text or "Bekor" in text:
+        return await cancel(update, context)
+    if "O'tkazib" not in text and text:
+        user_data_store[user_id]['quantity_text'] = text
+    await update.message.reply_text(
+        "4️⃣ 📸 <b>Rasmlarni yuboring</b>\n⚠️ Kamida 2 ta rasm kerak!",
         parse_mode='HTML', reply_markup=done_photos_keyboard()
     )
     return MEVA_PHOTOS
@@ -783,6 +798,19 @@ async def sabzavot_price(update, context):
     except ValueError:
         await update.message.reply_text("❗ Iltimos, faqat raqam kiriting! Masalan: 5000")
         return SABZAVOT_PRICE
+    await update.message.reply_text(
+        "📦 <b>Miqdori</b> (ixtiyoriy):\n<i>Masalan: 500 kg, 1 tonna, 200 litr...</i>",
+        parse_mode='HTML', reply_markup=skip_keyboard()
+    )
+    return SABZAVOT_QUANTITY
+
+async def sabzavot_quantity(update, context):
+    user_id = update.effective_user.id
+    text = update.message.text
+    if "❌" in text or "Bekor" in text:
+        return await cancel(update, context)
+    if "O'tkazib" not in text and text:
+        user_data_store[user_id]['quantity_text'] = text
     await update.message.reply_text("📸 Sabzavot rasmlarini yuboring.\nBarcha rasmlarni yuborib bo'lgach, 'Rasmlar tayyor' tugmasini bosing.", parse_mode='HTML', reply_markup=done_photos_keyboard())
     return SABZAVOT_PHOTOS
 

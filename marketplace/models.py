@@ -46,6 +46,7 @@ class Product(models.Model):
     standardized_name = models.CharField(max_length=200, blank=True, verbose_name="Standart nomi (To'g'rilangan)")
     price = models.DecimalField(max_digits=12, decimal_places=0, verbose_name="Narxi (so'm)")
     quantity = models.IntegerField(null=True, blank=True, verbose_name="Soni (dona)")
+    quantity_text = models.CharField(max_length=100, blank=True, default="", verbose_name="Miqdori (matn)")
     age = models.CharField(max_length=50, blank=True, verbose_name="Yoshi")
     weight = models.CharField(max_length=50, blank=True, verbose_name="Og'irligi/Massasi")
     gender = models.CharField(max_length=50, blank=True, verbose_name="Jinsi (Erkak/Urg'ochi)")

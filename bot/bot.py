@@ -25,9 +25,9 @@ from .handlers import (
     kochat_name, kochat_age, kochat_price, kochat_quantity,
     kochat_photos, kochat_location, kochat_phone, kochat_description,
     # Meva
-    meva_name, meva_price, meva_photos, meva_location, meva_phone, meva_description,
+    meva_name, meva_price, meva_quantity, meva_photos, meva_location, meva_phone, meva_description,
     # Sabzavot
-    sabzavot_name, sabzavot_price, sabzavot_photos,
+    sabzavot_name, sabzavot_price, sabzavot_quantity, sabzavot_photos,
     sabzavot_location, sabzavot_phone, sabzavot_description,
     # Parranda Choice
     parranda_choice,
@@ -116,6 +116,9 @@ def create_application(token: str):
             MEVA_PRICE: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, meva_price),
             ],
+            MEVA_QUANTITY: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, meva_quantity),
+            ],
             MEVA_PHOTOS: [
                 MessageHandler(filters.PHOTO, meva_photos),
                 MessageHandler(filters.TEXT & ~filters.COMMAND, meva_photos),
@@ -134,6 +137,7 @@ def create_application(token: str):
             # Sabzavot states
             SABZAVOT_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, sabzavot_name)],
             SABZAVOT_PRICE: [MessageHandler(filters.TEXT & ~filters.COMMAND, sabzavot_price)],
+            SABZAVOT_QUANTITY: [MessageHandler(filters.TEXT & ~filters.COMMAND, sabzavot_quantity)],
             SABZAVOT_PHOTOS: [
                 MessageHandler(filters.PHOTO, sabzavot_photos),
                 MessageHandler(filters.TEXT & ~filters.COMMAND, sabzavot_photos)

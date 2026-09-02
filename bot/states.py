@@ -15,6 +15,7 @@
     # Meva
     MEVA_NAME,
     MEVA_PRICE,
+    MEVA_QUANTITY,
     MEVA_PHOTOS,
     MEVA_LOCATION,
     MEVA_PHONE,
@@ -23,6 +24,7 @@
     # Sabzavot
     SABZAVOT_NAME,
     SABZAVOT_PRICE,
+    SABZAVOT_QUANTITY,
     SABZAVOT_PHOTOS,
     SABZAVOT_LOCATION,
     SABZAVOT_PHONE,
@@ -62,4 +64,4 @@
     DARAXT_PHONE,
     DARAXT_DESCRIPTION,
 
-) = range(46)
+) = range(48)

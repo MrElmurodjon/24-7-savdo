@@ -28,7 +28,14 @@ def format_kochat_message(product):
     age = f"\n📅 Yoshi: {product.age}" if product.age else ""
     desc = f"\n\n📝 Qo'shimcha: {product.description}" if product.description else ""
     location_text = _get_location_text(product)
-    qty = f"\n📦 <b>Miqdori:</b> {product.quantity} kg" if getattr(product, 'quantity', None) else ""
+    qty_text = getattr(product, 'quantity_text', '') or ''
+    qty_num = getattr(product, 'quantity', None)
+    if qty_text:
+        qty = f"\n📦 <b>Miqdori:</b> {qty_text}"
+    elif qty_num:
+        qty = f"\n📦 <b>Miqdori:</b> {qty_num} kg"
+    else:
+        qty = ""
     date_str = product.created_at.strftime("%d.%m.%Y")
 
     return f"""🌱 <b>KO'CHAT SOTILADI</b>
@@ -45,7 +52,14 @@ def format_meva_message(product):
     price_formatted = f"{int(product.price):,}".replace(',', ' ')
     desc = f"\n\n📝 Qo'shimcha: {product.description}" if product.description else ""
     location_text = _get_location_text(product)
-    qty = f"\n📦 <b>Miqdori:</b> {product.quantity} kg" if getattr(product, 'quantity', None) else ""
+    qty_text = getattr(product, 'quantity_text', '') or ''
+    qty_num = getattr(product, 'quantity', None)
+    if qty_text:
+        qty = f"\n📦 <b>Miqdori:</b> {qty_text}"
+    elif qty_num:
+        qty = f"\n📦 <b>Miqdori:</b> {qty_num} kg"
+    else:
+        qty = ""
     date_str = product.created_at.strftime("%d.%m.%Y")
 
     return f"""🍎 <b>MEVA/MAHSULOT SOTILADI</b>
@@ -62,7 +76,14 @@ def format_sabzavot_message(product):
     price_formatted = f"{int(product.price):,}".replace(',', ' ')
     desc = f"\n\n📝 Qo'shimcha: {product.description}" if product.description else ""
     location_text = _get_location_text(product)
-    qty = f"\n📦 <b>Miqdori:</b> {product.quantity} kg" if getattr(product, 'quantity', None) else ""
+    qty_text = getattr(product, 'quantity_text', '') or ''
+    qty_num = getattr(product, 'quantity', None)
+    if qty_text:
+        qty = f"\n📦 <b>Miqdori:</b> {qty_text}"
+    elif qty_num:
+        qty = f"\n📦 <b>Miqdori:</b> {qty_num} kg"
+    else:
+        qty = ""
     date_str = product.created_at.strftime("%d.%m.%Y")
 
     return f"""🥕 <b>SABZAVOT SOTILADI</b>
@@ -81,7 +102,14 @@ def format_parranda_message(product):
     weight = f"\n⚖️ Og'irligi: {product.weight}" if product.weight else ""
     desc = f"\n\n📝 Qo'shimcha: {product.description}" if product.description else ""
     location_text = _get_location_text(product)
-    qty = f"\n📦 <b>Miqdori:</b> {product.quantity} kg" if getattr(product, 'quantity', None) else ""
+    qty_text = getattr(product, 'quantity_text', '') or ''
+    qty_num = getattr(product, 'quantity', None)
+    if qty_text:
+        qty = f"\n📦 <b>Miqdori:</b> {qty_text}"
+    elif qty_num:
+        qty = f"\n📦 <b>Miqdori:</b> {qty_num} kg"
+    else:
+        qty = ""
     date_str = product.created_at.strftime("%d.%m.%Y")
 
     return f"""🐔 <b>PARRANDA SOTILADI</b>
@@ -99,7 +127,14 @@ def format_tuxum_message(product):
     qty = f"\n📦 Soni: {product.quantity} ta" if product.quantity else ""
     desc = f"\n\n📝 Qo'shimcha: {product.description}" if product.description else ""
     location_text = _get_location_text(product)
-    qty = f"\n📦 <b>Miqdori:</b> {product.quantity} kg" if getattr(product, 'quantity', None) else ""
+    qty_text = getattr(product, 'quantity_text', '') or ''
+    qty_num = getattr(product, 'quantity', None)
+    if qty_text:
+        qty = f"\n📦 <b>Miqdori:</b> {qty_text}"
+    elif qty_num:
+        qty = f"\n📦 <b>Miqdori:</b> {qty_num} kg"
+    else:
+        qty = ""
     date_str = product.created_at.strftime("%d.%m.%Y")
 
     return f"""🥚 <b>TUXUM SOTILADI</b>
@@ -198,14 +233,16 @@ async def edit_product_in_channel(bot: Bot, product, images) -> bool:
         logger.error(f"Tahrirlashda xato: {e}")
         return False
 
-async def delete_product_from_channel(bot: Bot, product) -> bool:
+async def delete_product_from_channel(bot: Bot, product, count=1) -> bool:
     channel_id = await _get_channel_id()
     if not channel_id or not product.telegram_message_id:
         return False
 
-    try:
-        await bot.delete_message(chat_id=channel_id, message_id=product.telegram_message_id)
-        return True
-    except TelegramError as e:
-        logger.error(f"O'chirishda xato: {e}")
-        return False
+    success = False
+    for i in range(count):
+        try:
+            await bot.delete_message(chat_id=channel_id, message_id=product.telegram_message_id + i)
+            success = True
+        except TelegramError as e:
+            logger.error(f"O'chirishda xato: {e}")
+    return success
