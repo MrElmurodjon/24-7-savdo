@@ -24,7 +24,14 @@ def _get_location_text(product):
 
 def format_kochat_message(product):
     price_formatted = f"{int(product.price):,}".replace(',', ' ')
-    qty = f"\n📦 Soni: {product.quantity} dona" if product.quantity else ""
+    qty_text = getattr(product, 'quantity_text', '') or ''
+    qty_num = getattr(product, 'quantity', None)
+    if qty_text:
+        qty = f"\n📦 <b>Soni:</b> {qty_text}"
+    elif qty_num:
+        qty = f"\n📦 <b>Soni:</b> {qty_num}"
+    else:
+        qty = ""
     age = f"\n📅 Yoshi: {product.age}" if product.age else ""
     desc = f"\n\n📝 Qo'shimcha: {product.description}" if product.description else ""
     location_text = _get_location_text(product)

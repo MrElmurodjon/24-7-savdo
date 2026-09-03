@@ -261,8 +261,8 @@ async def kochat_price(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❗ Iltimos, faqat raqam kiriting! Masalan: 25000")
         return KOCHAT_PRICE
     await update.message.reply_text(
-        "4️⃣ Ko'chatlar <b>sonini</b> kiriting (dona):\n"
-        "<i>Masalan: 50</i>",
+        "4️⃣ Ko'chatlar <b>sonini</b> kiriting:\n"
+        "<i>Masalan: 50 ta, 100 dona, 200...</i>",
         parse_mode='HTML',
         reply_markup=skip_keyboard()
     )
@@ -274,12 +274,9 @@ async def kochat_quantity(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     if "❌" in text or "Bekor" in text:
         return await cancel(update, context)
-    if "O'tkazib" not in text:
-        try:
-            user_data_store[user_id]['quantity'] = int(text)
-        except ValueError:
-            await update.message.reply_text("❗ Iltimos, faqat raqam kiriting!")
-            return KOCHAT_QUANTITY
+    if "O'tkazib" not in text and text:
+        # Raqam ham, matn ham qabul qilinadi - automatik birlik qo'shilmaydi
+        user_data_store[user_id]['quantity_text'] = text
     await update.message.reply_text(
         "5️⃣ Ko'chatning <b>rasmlarini</b> yuboring 📸\n"
         "⚠️ Kamida 2 ta rasm yuborish shart!\n\n"
